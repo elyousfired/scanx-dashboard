@@ -263,10 +263,15 @@ async function loadData(){
   try{
     for(var p=1;p<=pages;p++){
       var pp=Math.min(100,lim-(p-1)*100);
-      var u='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page='+pp+'&page='+p+'&sparkline=true&price_change_percentage=24h,7d';
-      if(cat)u+='&category='+cat;
-      var r=await fetch(u);
-      if(!r.ok)throw new Error('API '+r.status);
+      var base='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page='+pp+'&page='+p+'&sparkline=true&price_change_percentage=24h,7d';
+      if(cat)base+='&category='+cat;
+      var endpoints=[base,'https://corsproxy.io/?url='+encodeURIComponent(base)];
+      var r=null;
+      for(var ei=0;ei<endpoints.length;ei++){
+        try{r=await fetch(endpoints[ei],{signal:AbortSignal.timeout(9000)});if(r.ok)break;}
+        catch(ex){r=null;}
+      }
+      if(!r||!r.ok)throw new Error('Rate limited - wait 60s and refresh');
       toks=toks.concat(await r.json());
     }
     ALLDATA=toks.map(function(t,i){
@@ -296,7 +301,11 @@ async function loadData(){
 
 async function fetchGlobal(){
   try{
-    var resp=await fetch('https://api.coingecko.com/api/v3/global');
+    var _gurl='https://api.coingecko.com/api/v3/global';
+    var _gurl2='https://corsproxy.io/?url='+encodeURIComponent(_gurl);
+    var resp=null;
+    try{resp=await fetch(_gurl,{signal:AbortSignal.timeout(6000)});}catch(e){}
+    if(!resp||!resp.ok){try{resp=await fetch(_gurl2,{signal:AbortSignal.timeout(6000)});}catch(e){}}
     var data=(await resp.json()).data;
     var mc=data.total_market_cap.usd,vol=data.total_volume.usd,btc=data.market_cap_percentage.btc;
     document.getElementById('navmc').textContent=fmt(mc);
