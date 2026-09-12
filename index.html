@@ -483,6 +483,7 @@ var CURRENT_MODE = 'global'; // 'global' or 'bybit'
 var ALLDATA = [], TOP50 = [], CATEGORY_DATA = [], STABLE_DATA = [];
 var BYBIT_DATA = [], BYBIT_RENDER = [];
 var CG_MAP = {}; // fast symbol -> coin mapping
+var MCAP_MAP = {}; // fast symbol -> market cap mapping (Paprika/CG)
 var CURRENT_CAT = '', CURRENT_PRESET = 'all';
 var SK = 'ratio', SD = 'desc';
 var DC = null, BC = null, SC = null, STC = null;
@@ -666,6 +667,32 @@ function triggerScan(){
 }
 
 /* ── BYBIT SPOT SCANNER (100% COVERAGE) ── */
+/* ── INSTANT MARKET CAP ENGINE (PAPRIKA 2000 TOKENS) ── */
+async function fetchMarketCaps(){
+  if(Object.keys(MCAP_MAP).length >= 100) return MCAP_MAP;
+  try {
+    var data = await fetchSafe('https://api.coinpaprika.com/v1/tickers', 8000);
+    if(data && Array.isArray(data)){
+      data.forEach(function(item){
+        var sym = (item.symbol || '').toUpperCase();
+        var usd = item.quotes && item.quotes.USD;
+        var mc = usd ? (usd.market_cap || 0) : 0;
+        if(mc > 0 && !MCAP_MAP[sym]){
+          MCAP_MAP[sym] = {
+            mc: mc,
+            name: item.name,
+            rank: item.rank
+          };
+        }
+      });
+    }
+  } catch(e){
+    console.warn('Market cap fast fetch fallback:', e);
+  }
+  return MCAP_MAP;
+}
+
+/* ── BYBIT SPOT SCANNER (100% COVERAGE) ── */
 async function scanBybit(){
   if(BYBIT_SCANNING) return;
   BYBIT_SCANNING = true;
@@ -673,15 +700,16 @@ async function scanBybit(){
   btn.disabled = true;
   btn.innerHTML = 'Scanning Bybit...';
   showLoading(true);
-  setProgress(25, 'Connecting to Bybit Public API v5...');
-  document.getElementById('ld-txt').textContent = 'Fetching 100% of Bybit Spot instruments...';
+  setProgress(25, 'Connecting to Bybit Public API v5 & Market Caps...');
+  document.getElementById('ld-txt').textContent = 'Fetching 100% of Bybit Spot instruments & Market Caps...';
   document.getElementById('ld-sub').textContent = 'Querying Bybit Spot tickers with zero exclusions';
 
   try {
-    // Parallel fetch: instruments info for exact base/quote & tickers for 24h stats
-    var [instRes, tickRes] = await Promise.all([
+    // Parallel fetch: instruments info, tickers, AND fast 2000-token market caps
+    var [instRes, tickRes, _] = await Promise.all([
       fetchSafe('https://api.bybit.com/v5/market/instruments-info?category=spot', 8000),
-      fetchSafe('https://api.bybit.com/v5/market/tickers?category=spot', 8000)
+      fetchSafe('https://api.bybit.com/v5/market/tickers?category=spot', 8000),
+      fetchMarketCaps()
     ]);
 
     var tickList = (tickRes && tickRes.result && tickRes.result.list) ? tickRes.result.list : [];
@@ -760,12 +788,21 @@ async function scanBybit(){
     var bybitCoins = [];
     Object.keys(tokenMap).forEach(function(base){
       var item = tokenMap[base];
-      var cg = CG_MAP[base] || null;
-      var mc = cg ? (cg.market_cap || 0) : 0;
-      var name = cg ? cg.name : base;
-      var img = cg ? cg.image : '';
+      var cleanBase = base;
+      if(cleanBase.startsWith('1000000')) cleanBase = cleanBase.slice(7);
+      else if(cleanBase.startsWith('1000')) cleanBase = cleanBase.slice(4);
 
-      item.id = cg ? cg.id : base.toLowerCase();
+      var cg = CG_MAP[base] || CG_MAP[cleanBase] || null;
+      var pap = MCAP_MAP[base] || MCAP_MAP[cleanBase] || null;
+
+      var mc = 0;
+      if(cg && cg.market_cap > 0) mc = cg.market_cap;
+      else if(pap && pap.mc > 0) mc = pap.mc;
+
+      var name = (cg && cg.name) ? cg.name : ((pap && pap.name) ? pap.name : base);
+      var img = (cg && cg.image) ? cg.image : '';
+
+      item.id = (cg && cg.id) ? cg.id : base.toLowerCase();
       item.pair = item.primaryPair || (base + '/USDT');
       item.name = name;
       item.img = img;
@@ -829,6 +866,7 @@ async function fetchCGBasics(){
         data.forEach(function(c){
           var s = (c.symbol||'').toUpperCase();
           if(!CG_MAP[s]) CG_MAP[s] = c;
+          if(!MCAP_MAP[s] && c.market_cap) MCAP_MAP[s] = { mc: c.market_cap, name: c.name };
         });
       }
     }
@@ -869,6 +907,24 @@ async function startScan(){
     if(data && Array.isArray(data) && data.length > 0){
       rawToks = rawToks.concat(data);
       failedStreak = 0;
+      data.forEach(function(c){
+        var s = (c.symbol||'').toUpperCase();
+        if(!CG_MAP[s]) CG_MAP[s] = c;
+        if(!MCAP_MAP[s] && c.market_cap) MCAP_MAP[s] = { mc: c.market_cap, name: c.name };
+      });
+      if(CURRENT_MODE === 'bybit' && BYBIT_DATA.length > 0){
+        var changed = false;
+        BYBIT_DATA.forEach(function(bItem){
+          if(bItem.mc === 0 && CG_MAP[bItem.sym]){
+            var cg = CG_MAP[bItem.sym];
+            bItem.mc = cg.market_cap || 0;
+            if(!bItem.img && cg.image) bItem.img = cg.image;
+            if(bItem.name === bItem.sym && cg.name) bItem.name = cg.name;
+            if(bItem.mc > 0){ bItem.ratio = bItem.vol / bItem.mc; changed = true; }
+          }
+        });
+        if(changed){ filterRender(); updateHero(); }
+      }
     } else {
       failedStreak++;
       if(failedStreak >= 3) break;
@@ -1549,7 +1605,10 @@ function showLoading(s){
   document.getElementById('erbox').style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', function(){ startScan(); });
+document.addEventListener('DOMContentLoaded', function(){
+  fetchMarketCaps();
+  startScan();
+});
 </script>
 </body>
 </html>
