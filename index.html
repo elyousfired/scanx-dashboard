@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCANX - Vol/MC Hunter Terminal</title>
+  <title>SCANX - Crypto & Bybit Spot Vol/MC Terminal</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#040810;--bg2:#080f1c;--bg3:#0d1626;
       --b1:#1a2740;--b2:#243350;
-      --G:#00ff88;--C:#00d4ff;--R:#ff4466;--O:#ff9933;--Y:#ffdd44;--P:#b844ff;--B:#38bdf8;
+      --G:#00ff88;--C:#00d4ff;--R:#ff4466;--O:#ff9933;--Y:#ffdd44;--P:#b844ff;--B:#38bdf8;--BY:#f7a600;
       --t:#c8d8f0;--td:#607090;--tm:#3a4e6a;
       --f:"Courier New",Courier,monospace;
       --cb:rgba(13,22,38,.85)
@@ -44,6 +44,15 @@
     .pd{width:7px;height:7px;border-radius:50%;background:var(--G);animation:pulse 2s ease-in-out infinite;display:inline-block}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.6)}}
 
+    /* DUAL DASHBOARD SWITCHER TABS */
+    #dashboard-switcher{background:var(--bg2);border-bottom:1px solid var(--b1);padding:6px 20px;display:flex;align-items:center;gap:10px}
+    .dtab{background:var(--bg3);border:1px solid var(--b1);color:var(--td);padding:8px 18px;border-radius:6px;cursor:pointer;font-family:var(--f);font-size:11px;font-weight:700;letter-spacing:1.5px;transition:all .2s;display:flex;align-items:center;gap:8px}
+    .dtab:hover{border-color:var(--C);color:var(--t)}
+    .dtab.act{background:rgba(0,255,136,.12);border-color:var(--G);color:var(--G)}
+    .dtab.act-bybit{background:rgba(247,166,0,.15);border-color:var(--BY);color:var(--BY)}
+    .dtab-badge{font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+    .bybit-badge{background:rgba(247,166,0,.2);color:var(--BY);border-color:rgba(247,166,0,.4)}
+
     /* SCAN PROGRESS BAR */
     #scanbar{background:var(--bg2);border-bottom:1px solid var(--b1);padding:8px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
     .sb-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tm);font-weight:700}
@@ -60,10 +69,10 @@
     .hc{background:var(--cb);border:1px solid var(--b1);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
     .hc:hover{border-color:var(--b2);transform:translateY(-1px)}
     .hc::before{content:"";position:absolute;top:0;left:0;right:0;height:2px}
-    .cg::before{background:var(--G)}.cc::before{background:var(--C)}.co::before{background:var(--O)}.cy::before{background:var(--Y)}.cr::before{background:var(--P)}
+    .cg::before{background:var(--G)}.cc::before{background:var(--C)}.co::before{background:var(--O)}.cy::before{background:var(--Y)}.cr::before{background:var(--P)}.cby::before{background:var(--BY)}
     .hl{font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tm);margin-bottom:6px}
     .hv{font-size:19px;font-weight:700}
-    .hv.g{color:var(--G)}.hv.c{color:var(--C)}.hv.o{color:var(--O)}.hv.y{color:var(--Y)}.hv.p{color:var(--P)}
+    .hv.g{color:var(--G)}.hv.c{color:var(--C)}.hv.o{color:var(--O)}.hv.y{color:var(--Y)}.hv.p{color:var(--P)}.hv.by{color:var(--BY)}
     .hs{font-size:9.5px;color:var(--td);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     /* MAIN */
@@ -94,6 +103,7 @@
     .cpill{background:var(--bg3);border:1px solid var(--b1);color:var(--td);padding:5px 11px;border-radius:4px;cursor:pointer;font-family:var(--f);font-size:10.5px;white-space:nowrap;letter-spacing:.5px;transition:all .2s;display:flex;align-items:center;gap:5px}
     .cpill:hover{border-color:var(--C);color:var(--t)}
     .cpill.act{background:rgba(0,255,136,.12);border-color:var(--G);color:var(--G);font-weight:700}
+    .cpill.act-bybit{background:rgba(247,166,0,.15);border-color:var(--BY);color:var(--BY);font-weight:700}
 
     /* CONTROLS */
     #ctrl{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
@@ -148,12 +158,14 @@
     .cat-rwa{background:rgba(255,221,68,.12);color:var(--Y);border:1px solid rgba(255,221,68,.4)}
     .cat-tok{background:rgba(96,112,144,.1);color:var(--tm);border:1px solid var(--b1)}
 
-    /* QUICK LINKS (DEX / CG) */
+    /* QUICK LINKS (DEX / CG / BYBIT) */
     .qlink{font-size:8px;text-decoration:none;padding:1px 4px;border-radius:2px;letter-spacing:.5px;transition:all .15s}
     .qlink-dex{color:var(--C);border:1px solid rgba(0,212,255,.3)}
     .qlink-dex:hover{background:rgba(0,212,255,.15);border-color:var(--C)}
     .qlink-cg{color:var(--G);border:1px solid rgba(0,255,136,.3)}
     .qlink-cg:hover{background:rgba(0,255,136,.15);border-color:var(--G)}
+    .qlink-bybit{color:var(--BY);border:1px solid rgba(247,166,0,.4);background:rgba(247,166,0,.1);font-weight:700}
+    .qlink-bybit:hover{background:var(--BY);color:#000}
 
     /* BIG RATIO DISPLAY */
     .ratio-big{display:flex;align-items:center;gap:8px}
@@ -165,10 +177,12 @@
     .shigh{color:var(--C)}.bhigh{background:var(--C)}
     .smid{color:var(--Y)}.bmid{background:var(--Y)}
     .slow{color:var(--td)}.blow{background:var(--td)}
+    .sby{color:var(--BY)}.bby{background:var(--BY)}
     .baghot{background:rgba(0,255,136,.12);color:var(--G);border:1px solid rgba(0,255,136,.4)}
     .baghigh{background:rgba(0,212,255,.12);color:var(--C);border:1px solid rgba(0,212,255,.4)}
     .bagmid{background:rgba(255,221,68,.12);color:var(--Y);border:1px solid rgba(255,221,68,.4)}
     .baglow{background:rgba(96,112,144,.12);color:var(--td);border:1px solid rgba(96,112,144,.3)}
+    .bagby{background:rgba(247,166,0,.15);color:var(--BY);border:1px solid rgba(247,166,0,.4)}
     .spc{width:75px}
 
     /* LOADING / SCANNING */
@@ -214,52 +228,64 @@
 <!-- TICKER -->
 <div id="tw">
   <div id="tl">&#9672; SCANX</div>
-  <div style="overflow:hidden;flex:1"><div id="tc"><span class="ti"><span class="s">Initializing hunter...</span></span></div></div>
+  <div style="overflow:hidden;flex:1"><div id="tc"><span class="ti"><span class="s">Initializing terminal...</span></span></div></div>
 </div>
 
 <!-- NAV -->
 <nav>
   <div class="nl">
-    <div class="li">&#9672;</div>
-    <div class="lt">SCANX</div>
-    <div class="lta">VOL/MC TERMINAL</div>
+    <div class="li" id="nav-logo-icon">&#9672;</div>
+    <div class="lt" id="nav-logo-text">SCANX</div>
+    <div class="lta" id="nav-logo-badge">VOL/MC TERMINAL</div>
   </div>
   <div class="nr">
-    <div class="ns"><span class="lb">Total Scanned</span><span class="vl" id="nav-scanned">&#8212;</span></div>
+    <div class="ns"><span class="lb" id="nav-count-lbl">Total Scanned</span><span class="vl" id="nav-scanned">&#8212;</span></div>
     <div class="ns"><span class="lb">Sector Vibe</span><span class="vl" id="nav-vibe" style="color:var(--C)">&#8212;</span></div>
     <div class="ns"><span class="lb">Next Scan</span><span class="vl" id="nav-next">&#8212;</span></div>
     <span class="pd" id="live-dot"></span>
   </div>
 </nav>
 
+<!-- DUAL DASHBOARD TABS SWITCHER -->
+<div id="dashboard-switcher">
+  <button class="dtab act" id="tab-global" onclick="switchMode('global')">
+    <span>&#127760; GLOBAL MARKET HUNTER</span>
+    <span class="dtab-badge" id="badge-global-cnt">2,500+ COINS</span>
+  </button>
+  <button class="dtab" id="tab-bybit" onclick="switchMode('bybit')">
+    <span>&#128993; BYBIT SPOT HUNTER</span>
+    <span class="dtab-badge bybit-badge" id="badge-bybit-cnt">ALL 538 PAIRS</span>
+  </button>
+</div>
+
 <!-- SCAN PROGRESS BAR -->
 <div id="scanbar">
-  <span class="sb-label">&#9672; SCAN</span>
+  <span class="sb-label" id="scan-mode-lbl">&#9672; SCAN</span>
   <div id="progress-wrap"><div id="progress-bar"></div></div>
   <span id="scan-status">Ready</span>
   <span id="next-scan"></span>
-  <button id="rescan-btn" onclick="startScan()">&#9654; SCAN NOW</button>
+  <button id="rescan-btn" onclick="triggerScan()">&#9654; SCAN NOW</button>
 </div>
 
 <!-- HERO STATS -->
 <div id="hero">
   <div class="hc cg">
-    <div class="hl">Market Scanned</div>
+    <div class="hl" id="h1-lbl">Market Scanned</div>
     <div class="hv g" id="h-scanned">&#8212;</div>
     <div class="hs" id="h-scanned-s">tokens analyzed (no stables)</div>
   </div>
   <div class="hc cc">
-    <div class="hl">Top Vol/MC Hunter</div>
+    <div class="hl" id="h2-lbl">Top Vol/MC Hunter</div>
     <div class="hv c" id="h-topratio">&#8212;</div>
     <div class="hs" id="h-toptoken">&#8212;</div>
   </div>
   <div class="hc co">
-    <div class="hl">Hot Tokens (&gt;20%)</div>
+    <div class="hl" id="h3-lbl">Hot Movers</div>
     <div class="hv o" id="h-hot">&#8212;</div>
-    <div class="hs">High momentum movers</div>
+    <div class="hs" id="h-hot-sub">High momentum tokens</div>
   </div>
   <div class="hc cy">
-    <div class="hl">Hottest Sector Vibe</div>
+    <div class="hl" id="h4-lbl">Hottest Sector Vibe</div>
     <div class="hv y" id="h-hotsector" style="font-size:16px">&#8212;</div>
     <div class="hs" id="h-hotsector-sub">Sector Vol/MC activity</div>
   </div>
@@ -273,7 +299,7 @@
 <!-- MAIN -->
 <div id="main">
 
-  <!-- STABLECOIN MACRO LIQUIDITY RADAR -->
+  <!-- STABLECOIN MACRO LIQUIDITY RADAR (Shown on Global, optional on Bybit) -->
   <div id="stable-radar">
     <div class="sr-header">
       <div class="sr-title">
@@ -340,10 +366,10 @@
   <!-- CONTROLS -->
   <div id="ctrl">
     <span class="cl">SEARCH:</span>
-    <input id="sb" type="text" placeholder="Symbol, name, or sector..." oninput="filterRender()"/>
+    <input id="sb" type="text" placeholder="Symbol, name, or pair..." oninput="filterRender()"/>
     
-    <span class="cl" style="margin-left:6px">DEPTH:</span>
-    <select class="fsel" id="depsel">
+    <span class="cl" id="depth-lbl" style="margin-left:6px">DEPTH:</span>
+    <select class="fsel" id="depsel" onchange="if(CURRENT_MODE==='global') startScan(); else filterRender();">
       <option value="4">1,000 tokens (Fast ⚡)</option>
       <option value="10" selected>2,500 tokens (Deep 🔥)</option>
       <option value="16">4,000 tokens (Ultra 🚀)</option>
@@ -355,6 +381,8 @@
       <option value="25">Top 25</option>
       <option value="50" selected>Top 50</option>
       <option value="100">Top 100</option>
+      <option value="250">Top 250</option>
+      <option value="9999">Show All</option>
     </select>
 
     <span class="cl">MIN MCAP:</span>
@@ -370,7 +398,7 @@
     <div style="display:flex;align-items:center;gap:4px;margin-left:auto">
       <span class="cl">PRESET:</span>
       <button class="pbtn act" onclick="setPreset('all',this)">All Top</button>
-      <button class="pbtn" onclick="setPreset('hot',this)">&#128293; &gt;50% Vol</button>
+      <button class="pbtn" onclick="setPreset('hot',this)">&#128293; &gt;20% Vol</button>
       <button class="pbtn" onclick="setPreset('pump',this)">&#128640; Pumping</button>
     </div>
   </div>
@@ -378,22 +406,22 @@
   <!-- TABLE -->
   <div id="tw2">
     <div class="tbar">
-      <div class="ttl">&#9672; VOL/MC HUNTER &#8212; TOP MOVERS (STABLES EXCLUDED) <span id="active-cat-tag" style="color:var(--G);font-size:9px"></span></div>
+      <div class="ttl" id="tbl-title">&#9672; VOL/MC HUNTER &#8212; TOP MOVERS <span id="active-cat-tag" style="color:var(--G);font-size:9px"></span></div>
       <span class="tsub" id="tbl-meta">Ready to scan</span>
     </div>
-    <div id="ldbox"><div class="spn"></div><div id="ld-txt">Initializing hunter...</div><div id="ld-sub">Scanning crypto market for highest Vol/MC anomalies (excluding stablecoins)</div></div>
+    <div id="ldbox"><div class="spn"></div><div id="ld-txt">Initializing hunter...</div><div id="ld-sub">Scanning market for highest Vol/MC anomalies</div></div>
     <div id="erbox">&#9888; Scan connection issue. Please retry.</div>
     <table id="mt" style="display:none">
       <thead>
         <tr>
           <th style="width:45px">RANK</th>
-          <th onclick="SRT('name')">TOKEN & SECTOR</th>
+          <th onclick="SRT('name')" id="th-tok">TOKEN & SECTOR</th>
           <th onclick="SRT('mc')">MARKET CAP</th>
-          <th onclick="SRT('vol')">24H VOLUME</th>
-          <th onclick="SRT('ratio')" class="sd">VOL / MC &#8597;</th>
+          <th onclick="SRT('vol')" id="th-vol">24H VOLUME</th>
+          <th onclick="SRT('ratio')" class="sd" id="th-ratio">VOL / MC &#8597;</th>
           <th onclick="SRT('c24')">24H %</th>
-          <th onclick="SRT('c7d')">7D %</th>
-          <th>7D CHART</th>
+          <th onclick="SRT('c7d')" id="th-c7d">7D %</th>
+          <th id="th-act">ACTION & CHART</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -405,7 +433,7 @@
     <!-- CHART 1: SECTOR VIBE -->
     <div class="card">
       <div class="cardh">
-        <span class="ctitle" style="color:var(--C)">&#9889; SECTOR VIBE (Vol/MC %)</span>
+        <span class="ctitle" style="color:var(--C)" id="c1-title">&#9889; SECTOR VIBE (Vol/MC %)</span>
         <span class="csub" id="sector-chart-sub">Category Momentum</span>
       </div>
       <div class="cbody-compact"><canvas id="sc-chart"></canvas></div>
@@ -414,7 +442,7 @@
     <!-- CHART 2: DISTRIBUTION -->
     <div class="card">
       <div class="cardh">
-        <span class="ctitle" style="color:var(--G)">&#9672; VOL/MC RATIO SPREAD</span>
+        <span class="ctitle" style="color:var(--G)" id="c2-title">&#9672; VOL/MC RATIO SPREAD</span>
         <span class="csub">Breakdown</span>
       </div>
       <div class="cbody-compact"><canvas id="dc"></canvas></div>
@@ -423,7 +451,7 @@
     <!-- CHART 3: TOP 15 TOKENS -->
     <div class="card">
       <div class="cardh">
-        <span class="ctitle" style="color:var(--O)">&#128293; TOP 15 VOL/MC MOVERS</span>
+        <span class="ctitle" style="color:var(--O)" id="c3-title">&#128293; TOP 15 VOL/MC MOVERS</span>
         <span class="csub">Ratios</span>
       </div>
       <div class="cbody-compact"><canvas id="bc"></canvas></div>
@@ -433,11 +461,11 @@
   <!-- TOP GAINERS / LOSERS -->
   <div class="g2">
     <div class="card">
-      <div class="cardh"><span class="ctitle" style="color:var(--G)">&#9650; TOP GAINERS (24H)</span><span class="csub">From top Vol/MC callset</span></div>
+      <div class="cardh"><span class="ctitle" style="color:var(--G)" id="g-title">&#9650; TOP GAINERS (24H)</span><span class="csub">Top performance</span></div>
       <div id="gainers"></div>
     </div>
     <div class="card">
-      <div class="cardh"><span class="ctitle" style="color:var(--R)">&#9660; TOP LOSERS (24H)</span><span class="csub">From top Vol/MC callset</span></div>
+      <div class="cardh"><span class="ctitle" style="color:var(--R)" id="l-title">&#9660; TOP LOSERS (24H)</span><span class="csub">Pullback opportunities</span></div>
       <div id="losers"></div>
     </div>
   </div>
@@ -445,17 +473,20 @@
 
 <!-- FOOTER -->
 <div id="ft">
-  <span>SCANX TERMINAL &#169; 2026 &#8212; Data via <a class="fl" href="https://coingecko.com" target="_blank">CoinGecko</a></span>
+  <span>SCANX TERMINAL &#169; 2026 &#8212; Data via <a class="fl" href="https://coingecko.com" target="_blank">CoinGecko</a> & <a class="fl" href="https://bybit.com" target="_blank">Bybit Public API v5</a></span>
   <span>Ratio Bands: <span style="color:var(--G)">HOT &gt;20%</span> &middot; <span style="color:var(--C)">HIGH 10-20%</span> &middot; <span style="color:var(--Y)">MID 5-10%</span> &middot; <span style="color:var(--td)">LOW &lt;5%</span></span>
   <span id="fu">&#8212;</span>
 </div>
 
 <script>
-var ALLDATA=[], TOP50=[], CATEGORY_DATA=[], STABLE_DATA=[];
-var CURRENT_CAT='', CURRENT_PRESET='all';
-var SK='ratio', SD='desc';
-var DC=null, BC=null, SC=null, STC=null;
-var NEXT_SCAN=3600, NST=null, SCANNING=false;
+var CURRENT_MODE = 'global'; // 'global' or 'bybit'
+var ALLDATA = [], TOP50 = [], CATEGORY_DATA = [], STABLE_DATA = [];
+var BYBIT_DATA = [], BYBIT_RENDER = [];
+var CG_MAP = {}; // fast symbol -> coin mapping
+var CURRENT_CAT = '', CURRENT_PRESET = 'all';
+var SK = 'ratio', SD = 'desc';
+var DC = null, BC = null, SC = null, STC = null;
+var NEXT_SCAN = 3600, NST = null, SCANNING = false;
 
 /* ── STABLECOINS DETECTION ───── */
 var STABLE_SYMS = new Set([
@@ -551,7 +582,195 @@ async function fetchSafe(url, timeoutMs){
   return null;
 }
 
-/* ── SCAN ENGINE ──────────────── */
+/* ── MODE SWITCHER ────────────── */
+function switchMode(mode){
+  CURRENT_MODE = mode;
+  var tabG = document.getElementById('tab-global');
+  var tabB = document.getElementById('tab-bybit');
+  var sr = document.getElementById('stable-radar');
+  var thVol = document.getElementById('th-vol');
+  var thRatio = document.getElementById('th-ratio');
+  var thAct = document.getElementById('th-act');
+  var thC7d = document.getElementById('th-c7d');
+  var title = document.getElementById('tbl-title');
+  var logoBadge = document.getElementById('nav-logo-badge');
+  var logoIcon = document.getElementById('nav-logo-icon');
+  var depthLbl = document.getElementById('depth-lbl');
+  var depsel = document.getElementById('depsel');
+
+  if(mode === 'bybit'){
+    tabG.className = 'dtab';
+    tabB.className = 'dtab act-bybit';
+    logoBadge.textContent = 'BYBIT SPOT HUNTER';
+    logoBadge.style.color = 'var(--BY)';
+    logoBadge.style.borderColor = 'rgba(247,166,0,0.4)';
+    logoIcon.style.background = 'var(--BY)';
+    sr.style.display = 'none'; // hide stablecoin macro radar in bybit tab to keep focus on spot
+    title.innerHTML = '&#9672; BYBIT SPOT HUNTER &#8212; VOLUME / MARKET CAP RATIO <span id="active-cat-tag" style="color:var(--BY);font-size:9px"></span>';
+    thVol.textContent = 'BYBIT 24H VOL';
+    thRatio.innerHTML = 'BYBIT VOL/MC &#8597;';
+    thC7d.textContent = '24H HIGH/LOW';
+    thAct.textContent = 'TRADE ON BYBIT';
+    depthLbl.style.display = 'none';
+    depsel.style.display = 'none';
+
+    document.getElementById('h1-lbl').textContent = 'Bybit Spot Scanned';
+    document.getElementById('h-scanned-s').textContent = '100% Bybit spot pairs';
+    document.getElementById('h2-lbl').textContent = 'Top Bybit Vol/MC';
+    document.getElementById('h3-lbl').textContent = 'Bybit Hot Movers';
+    document.getElementById('c1-title').textContent = '⚡ BYBIT SPOT SECTORS';
+    document.getElementById('c3-title').textContent = '🔥 TOP 15 BYBIT VOL/MC';
+
+    if(!BYBIT_DATA.length){
+      scanBybit();
+    } else {
+      filterRender();
+      updateHero();
+      renderCharts();
+      renderMovers();
+    }
+  } else {
+    tabG.className = 'dtab act';
+    tabB.className = 'dtab';
+    logoBadge.textContent = 'VOL/MC TERMINAL';
+    logoBadge.style.color = 'var(--G)';
+    logoBadge.style.borderColor = 'rgba(0,255,136,0.3)';
+    logoIcon.style.background = 'var(--G)';
+    sr.style.display = 'block';
+    title.innerHTML = '&#9672; VOL/MC HUNTER &#8212; TOP MOVERS (STABLES EXCLUDED) <span id="active-cat-tag" style="color:var(--G);font-size:9px"></span>';
+    thVol.textContent = '24H VOLUME';
+    thRatio.innerHTML = 'VOL / MC &#8597;';
+    thC7d.textContent = '7D %';
+    thAct.textContent = '7D CHART';
+    depthLbl.style.display = 'inline-block';
+    depsel.style.display = 'inline-block';
+
+    document.getElementById('h1-lbl').textContent = 'Market Scanned';
+    document.getElementById('h-scanned-s').textContent = 'tokens analyzed (no stables)';
+    document.getElementById('h2-lbl').textContent = 'Top Vol/MC Hunter';
+    document.getElementById('h3-lbl').textContent = 'Hot Movers';
+    document.getElementById('c1-title').textContent = '⚡ SECTOR VIBE (Vol/MC %)';
+    document.getElementById('c3-title').textContent = '🔥 TOP 15 VOL/MC MOVERS';
+
+    filterRender();
+    updateHero();
+    renderCharts();
+    renderMovers();
+  }
+}
+
+function triggerScan(){
+  if(CURRENT_MODE === 'bybit') scanBybit();
+  else startScan();
+}
+
+/* ── BYBIT SPOT SCANNER (100% COVERAGE) ── */
+async function scanBybit(){
+  if(SCANNING) return;
+  SCANNING = true;
+  var btn = document.getElementById('rescan-btn');
+  btn.disabled = true;
+  btn.innerHTML = 'Scanning Bybit...';
+  showLoading(true);
+  setProgress(20, 'Connecting to Bybit Public API v5...');
+  document.getElementById('ld-txt').textContent = 'Fetching 100% of Bybit Spot instruments...';
+  document.getElementById('ld-sub').textContent = 'Querying Bybit Spot tickers with zero exclusions';
+
+  try {
+    var bybitUrl = 'https://api.bybit.com/v5/market/tickers?category=spot';
+    var res = await fetchSafe(bybitUrl, 8000);
+    if(!res || !res.result || !res.result.list){
+      throw new Error('Bybit API failed');
+    }
+
+    var list = res.result.list;
+    setProgress(60, 'Processing ' + list.length + ' Bybit Spot pairs...');
+
+    // If CoinGecko map not loaded yet, fetch CoinGecko quick map
+    if(Object.keys(CG_MAP).length === 0){
+      await fetchCGBasics();
+    }
+
+    var bybitCoins = [];
+    list.forEach(function(t){
+      var pair = t.symbol || '';
+      // We process all USDT, USDC, BTC pairs
+      var base = '';
+      if(pair.endsWith('USDT')) base = pair.slice(0, -4);
+      else if(pair.endsWith('USDC')) base = pair.slice(0, -4);
+      else if(pair.endsWith('BTC')) base = pair.slice(0, -3);
+      else base = pair;
+
+      if(STABLE_SYMS.has(base)) return; // exclude stablecoins from Hunter list
+
+      var vol = parseFloat(t.turnover24h || 0);
+      var price = parseFloat(t.lastPrice || 0);
+      var chg = parseFloat(t.price24hPcnt || 0) * 100;
+      var high = parseFloat(t.highPrice24h || 0);
+      var low = parseFloat(t.lowPrice24h || 0);
+
+      // Match with CoinGecko Market Cap & metadata
+      var cg = CG_MAP[base] || null;
+      var mc = cg ? (cg.market_cap || 0) : 0;
+      var name = cg ? cg.name : base;
+      var img = cg ? cg.image : '';
+
+      var ratio = mc > 0 ? (vol / mc) : 0;
+      var item = {
+        id: cg ? cg.id : base.toLowerCase(),
+        sym: base,
+        pair: pair,
+        name: name,
+        img: img,
+        price: price,
+        vol: vol,
+        mc: mc,
+        ratio: ratio,
+        c24: chg,
+        high: high,
+        low: low,
+        bybitUrl: 'https://www.bybit.com/en/trade/spot/' + base + '/USDT'
+      };
+      item.cat = detectCategory(item);
+      bybitCoins.push(item);
+    });
+
+    BYBIT_DATA = bybitCoins;
+    document.getElementById('badge-bybit-cnt').textContent = BYBIT_DATA.length + ' SPOT PAIRS';
+    setProgress(100, 'Bybit Scan Complete &#9679; ' + BYBIT_DATA.length + ' Spot Pairs Analyzed');
+
+    var now = new Date();
+    document.getElementById('h-time').textContent = now.toLocaleTimeString();
+    document.getElementById('fu').textContent = 'Scanned ' + BYBIT_DATA.length + ' Bybit Spot pairs at ' + now.toLocaleTimeString();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('erbox').style.display = 'block';
+  }
+
+  SCANNING = false;
+  btn.disabled = false;
+  btn.innerHTML = '&#9654; SCAN NOW';
+  filterRender();
+  updateHero();
+  renderTicker();
+  renderCharts();
+  renderMovers();
+}
+
+async function fetchCGBasics(){
+  try {
+    var p1 = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page=1', 9000);
+    var p2 = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page=2', 9000);
+    var all = (p1||[]).concat(p2||[]);
+    all.forEach(function(c){
+      var s = (c.symbol||'').toUpperCase();
+      if(!CG_MAP[s]) CG_MAP[s] = c;
+    });
+  } catch(e){}
+}
+
+/* ── GLOBAL COINGECKO SCAN ENGINE ── */
 async function startScan(){
   if(SCANNING)return;
   SCANNING=true;
@@ -614,6 +833,9 @@ async function startScan(){
       atl: t.atl || 0
     };
 
+    // Store in global CG map for Bybit matching
+    if(!CG_MAP[item.sym]) CG_MAP[item.sym] = item;
+
     if(isStable(item)){
       stablesCollected.push(item);
     } else {
@@ -623,6 +845,8 @@ async function startScan(){
   });
 
   ALLDATA = hunterCoins;
+  document.getElementById('badge-global-cnt').textContent = ALLDATA.length + ' COINS';
+
   if(stablesCollected.length > 0){
     STABLE_DATA = stablesCollected;
     renderStablesMacro();
@@ -701,7 +925,6 @@ async function fetchStablecoinsMacro(){
     }
   }
 
-  /* Fetch top individual stablecoins for breakdown */
   var stablesList = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=stablecoins&per_page=20&page=1', 10000);
   if(stablesList && Array.isArray(stablesList) && stablesList.length > 0){
     STABLE_DATA = stablesList.map(function(s){
@@ -719,8 +942,6 @@ async function fetchStablecoinsMacro(){
 
 function renderStablesMacro(){
   if(!STABLE_DATA || !STABLE_DATA.length) return;
-
-  /* Render Mini Horizontal Volume Bar Chart */
   var canvas = document.getElementById('stables-chart');
   if(!canvas) return;
   var ctx = canvas.getContext('2d');
@@ -756,7 +977,6 @@ function renderStablesMacro(){
     }
   });
 
-  /* Fill expandable table */
   var totalVol = STABLE_DATA.reduce(function(s,t){ return s + t.vol; }, 0);
   var tbody = document.getElementById('stable-tbody');
   if(tbody){
@@ -829,11 +1049,16 @@ async function fetchSectorVibe(){
 function selectCategory(catId, btn){
   CURRENT_CAT = catId;
   document.querySelectorAll('#cat-pills .cpill').forEach(function(b){
-    b.classList.remove('act');
+    b.classList.remove('act', 'act-bybit');
   });
-  if(btn) btn.classList.add('act');
+  if(btn) btn.classList.add(CURRENT_MODE === 'bybit' ? 'act-bybit' : 'act');
   document.getElementById('active-cat-tag').textContent = catId ? ' [' + catId.toUpperCase() + ']' : '';
-  startScan();
+  
+  if(CURRENT_MODE === 'bybit'){
+    filterRender();
+  } else {
+    startScan();
+  }
 }
 
 function setPreset(p, el){
@@ -849,37 +1074,75 @@ function filterRender(){
   var topN = parseInt(document.getElementById('topsel').value)||50;
   var minMC = parseFloat(document.getElementById('mcapsel').value)||0;
 
-  var filtered = ALLDATA.filter(function(t){
-    var mok = t.mc >= minMC;
-    var qok = !q || t.sym.toLowerCase().indexOf(q)>=0 || t.name.toLowerCase().indexOf(q)>=0 || (t.cat && t.cat.tag.toLowerCase().indexOf(q)>=0);
+  var source = (CURRENT_MODE === 'bybit') ? BYBIT_DATA : ALLDATA;
+
+  var filtered = source.filter(function(t){
+    var mok = (minMC === 0) || (t.mc >= minMC);
+    var qok = !q || t.sym.toLowerCase().indexOf(q)>=0 || (t.name&&t.name.toLowerCase().indexOf(q)>=0) || (t.pair&&t.pair.toLowerCase().indexOf(q)>=0) || (t.cat && t.cat.tag.toLowerCase().indexOf(q)>=0);
+    
+    // Category pill filter
+    var catOk = true;
+    if(CURRENT_CAT){
+      if(CURRENT_CAT === 'artificial-intelligence') catOk = (t.cat && t.cat.tag === 'AI');
+      else if(CURRENT_CAT === 'meme-token') catOk = (t.cat && t.cat.tag === 'MEME');
+      else if(CURRENT_CAT === 'layer-2') catOk = (t.cat && t.cat.tag === 'L2');
+      else if(CURRENT_CAT === 'layer-1') catOk = (t.cat && t.cat.tag === 'L1');
+      else if(CURRENT_CAT === 'decentralized-finance-defi') catOk = (t.cat && t.cat.tag === 'DEFI');
+      else if(CURRENT_CAT === 'gaming') catOk = (t.cat && t.cat.tag === 'GAMING');
+      else if(CURRENT_CAT === 'depin' || CURRENT_CAT === 'real-world-assets-rwa') catOk = (t.cat && t.cat.tag === 'RWA');
+    }
+
     var pok = true;
-    if(CURRENT_PRESET === 'hot') pok = (t.ratio >= 0.50);
-    else if(CURRENT_PRESET === 'pump') pok = (t.ratio >= 0.20 && (t.c24||0) >= 10);
-    return mok && qok && pok;
+    if(CURRENT_PRESET === 'hot') pok = (t.ratio >= 0.20);
+    else if(CURRENT_PRESET === 'pump') pok = (t.ratio >= 0.05 && (t.c24||0) >= 5);
+    return mok && qok && catOk && pok;
   });
 
   filtered.sort(function(a,b){ return b.ratio - a.ratio; });
-  TOP50 = filtered.slice(0, topN);
+  var resultSlice = filtered.slice(0, topN);
 
-  renderTable();
-  document.getElementById('tbl-meta').textContent =
-    'Showing top ' + TOP50.length + ' Vol/MC from ' + ALLDATA.length + ' scanned tokens (no stables)';
-  document.getElementById('nav-scanned').textContent = ALLDATA.length.toLocaleString();
-}
-
-function updateHero(){
-  var hot = ALLDATA.filter(function(t){ return t.ratio >= 0.20; }).length;
-  document.getElementById('h-hot').textContent = hot;
-  document.getElementById('h-scanned').textContent = ALLDATA.length.toLocaleString();
-
-  if(TOP50.length > 0){
-    var best = TOP50[0];
-    document.getElementById('h-topratio').textContent = (best.ratio * 100).toFixed(1) + '%';
-    document.getElementById('h-toptoken').textContent = best.sym + ' #1 Vol/MC';
+  if(CURRENT_MODE === 'bybit'){
+    BYBIT_RENDER = resultSlice;
+    renderBybitTable();
+    document.getElementById('tbl-meta').textContent =
+      'Showing top ' + BYBIT_RENDER.length + ' Bybit Spot pairs from ' + BYBIT_DATA.length + ' total scanned pairs';
+    document.getElementById('nav-scanned').textContent = BYBIT_DATA.length.toLocaleString() + ' Bybit Pairs';
+  } else {
+    TOP50 = resultSlice;
+    renderTable();
+    document.getElementById('tbl-meta').textContent =
+      'Showing top ' + TOP50.length + ' Vol/MC from ' + ALLDATA.length + ' scanned tokens (no stables)';
+    document.getElementById('nav-scanned').textContent = ALLDATA.length.toLocaleString() + ' Coins';
   }
 }
 
-/* ── TABLE ────────────────────── */
+function updateHero(){
+  if(CURRENT_MODE === 'bybit'){
+    document.getElementById('h-scanned').textContent = BYBIT_DATA.length.toLocaleString();
+    var hot = BYBIT_DATA.filter(function(t){ return t.ratio >= 0.05; }).length;
+    document.getElementById('h-hot').textContent = hot;
+    document.getElementById('h-hot-sub').textContent = 'Bybit Vol/MC > 5%';
+
+    if(BYBIT_RENDER.length > 0){
+      var best = BYBIT_RENDER[0];
+      document.getElementById('h-topratio').textContent = (best.ratio * 100).toFixed(2) + '%';
+      document.getElementById('h-toptoken').textContent = (best.pair || best.sym) + ' #1 Bybit Vol/MC';
+    }
+  } else {
+    var hot = ALLDATA.filter(function(t){ return t.ratio >= 0.20; }).length;
+    document.getElementById('h-hot').textContent = hot;
+    document.getElementById('h-hot-sub').textContent = 'High momentum movers';
+    document.getElementById('h-scanned').textContent = ALLDATA.length.toLocaleString();
+
+    if(TOP50.length > 0){
+      var best = TOP50[0];
+      document.getElementById('h-topratio').textContent = (best.ratio * 100).toFixed(1) + '%';
+      document.getElementById('h-toptoken').textContent = best.sym + ' #1 Vol/MC';
+    }
+  }
+}
+
+/* ── TABLE SORTING ────────────── */
 function SRT(k){
   if(SK === k) SD = SD==='asc' ? 'desc' : 'asc';
   else { SK = k; SD = k==='name' ? 'asc' : 'desc'; }
@@ -888,15 +1151,63 @@ function SRT(k){
   var i = ks.indexOf(k);
   if(i>0) document.querySelectorAll('#mt thead th')[i].classList.add(SD==='asc'?'sa':'sd');
 
-  TOP50.sort(function(a,b){
+  var target = (CURRENT_MODE === 'bybit') ? BYBIT_RENDER : TOP50;
+  target.sort(function(a,b){
     var va = a[SK], vb = b[SK];
     if(va==null) va = SD==='asc' ? Infinity : -Infinity;
     if(vb==null) vb = SD==='asc' ? Infinity : -Infinity;
     return SD==='asc' ? (va>vb?1:-1) : (va<vb?1:-1);
   });
-  renderTable();
+
+  if(CURRENT_MODE === 'bybit') renderBybitTable();
+  else renderTable();
 }
 
+/* ── BYBIT TABLE RENDER ───────── */
+function renderBybitTable(){
+  showLoading(false);
+  var tb = document.getElementById('tbody');
+  if(!BYBIT_RENDER.length){
+    tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--tm)">No Bybit pairs match criteria. Hit SCAN NOW or adjust filters.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = BYBIT_RENDER.map(function(t, i){
+    var rc = (t.ratio >= 0.10)?'hot':(t.ratio>=0.03)?'high':(t.ratio>=0.01)?'mid':'low';
+    var rl = (t.ratio >= 0.10)?'HOT':(t.ratio>=0.03)?'HIGH':(t.ratio>=0.01)?'MID':'LOW';
+    var pct = (t.ratio * 100).toFixed(2);
+    var c24 = t.c24 || 0;
+    var su = c24 >= 0 ? 'up' : 'dn';
+    var au = c24 >= 0 ? '&#9650;' : '&#9660;';
+    var rkcls = i===0?'hr1':i===1?'hr2':i===2?'hr3':'hrn';
+    var cat = t.cat || { tag: 'TOKEN', cls: 'cat-tok' };
+
+    return '<tr>'+
+      '<td><div class="hotrank ' + rkcls + '">' + (i+1) + '</div></td>'+
+      '<td><div class="dtkw">'+
+        (t.img ? '<img class="timg" src="' + t.img + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="timg" style="background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--BY)">B</div>')+
+        '<div class="tnames">'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+            '<span class="tsym" style="color:var(--BY)">' + (t.pair || t.sym + '/USDT') + '</span>'+
+            '<span class="cbadge ' + cat.cls + '">' + cat.tag + '</span>'+
+          '</div>'+
+          '<span class="tname">' + (t.name || t.sym) + ' &middot; $' + t.price.toFixed(t.price<1?4:2) + '</span>'+
+        '</div>'+
+      '</div></td>'+
+      '<td class="mcp">' + (t.mc > 0 ? fmt(t.mc) : '<span style="color:var(--tm)">Unranked</span>') + '</td>'+
+      '<td class="mcp" style="color:var(--BY);font-weight:700">' + fmt(t.vol) + '</td>'+
+      '<td><div class="ratio-big"><span class="ratio-num s' + rc + '">' + pct + '%</span>'+
+        '<div class="rbw"><div class="rb b' + rc + '" style="width:' + bw(t.ratio) + '"></div></div>'+
+        '<span class="bdg bag' + rc + '">' + rl + '</span></div></td>'+
+      '<td class="cc ' + su + '">' + au + ' ' + Math.abs(c24).toFixed(2) + '%</td>'+
+      '<td class="mcp" style="font-size:9.5px;color:var(--td)">$' + t.low.toFixed(t.low<1?4:2) + ' - $' + t.high.toFixed(t.high<1?4:2) + '</td>'+
+      '<td><a class="qlink qlink-bybit" href="' + t.bybitUrl + '" target="_blank" style="padding:4px 8px;font-size:9px">TRADE ' + t.sym + ' &#8599;</a></td></tr>';
+  }).join('');
+
+  updateHero();
+}
+
+/* ── GLOBAL TABLE RENDER ──────── */
 function renderTable(){
   showLoading(false);
   var tb = document.getElementById('tbody');
@@ -965,22 +1276,28 @@ function drawSpark(t){
 
 /* ── TICKER ───────────────────── */
 function renderTicker(){
-  var top = TOP50.slice(0, 20);
+  var source = (CURRENT_MODE === 'bybit') ? BYBIT_RENDER : TOP50;
+  var top = source.slice(0, 20);
   var h = top.map(function(t){
     var c = t.c24>=0 ? 'up' : 'dn';
     var a = t.c24>=0 ? '&#9650;' : '&#9660;';
-    return '<span class="ti"><span class="s">' + t.sym + '</span><span class="' + c + '">' + (t.ratio*100).toFixed(1) + '% V/MC</span><span>' + a + ' ' + Math.abs(t.c24||0).toFixed(2) + '%</span></span>';
+    var pairStr = t.pair || t.sym;
+    return '<span class="ti"><span class="s">' + pairStr + '</span><span class="' + c + '">' + (t.ratio*100).toFixed(1) + '% V/MC</span><span>' + a + ' ' + Math.abs(t.c24||0).toFixed(2) + '%</span></span>';
   }).join('');
   document.getElementById('tc').innerHTML = h + h;
 }
 
 /* ── COMPACT CHARTS ───────────── */
 function renderCharts(){
-  /* 1. Donut */
+  var isBybit = (CURRENT_MODE === 'bybit');
+  var source = isBybit ? BYBIT_DATA : ALLDATA;
+  var target = isBybit ? BYBIT_RENDER : TOP50;
+
+  /* 1. Donut / Breakdown */
   var ctx1 = document.getElementById('dc').getContext('2d');
   if(DC) DC.destroy();
   var bk = {'HOT >20%':0, 'HIGH 10-20%':0, 'MID 5-10%':0, 'LOW <5%':0};
-  ALLDATA.forEach(function(t){
+  source.forEach(function(t){
     if(t.ratio >= 0.20) bk['HOT >20%']++;
     else if(t.ratio >= 0.10) bk['HIGH 10-20%']++;
     else if(t.ratio >= 0.05) bk['MID 5-10%']++;
@@ -1013,18 +1330,20 @@ function renderCharts(){
   /* 2. Top 15 Vol/MC bar chart */
   var ctx2 = document.getElementById('bc').getContext('2d');
   if(BC) BC.destroy();
-  var top15 = TOP50.slice(0, 15);
+  var top15 = target.slice(0, 15);
   BC = new Chart(ctx2, {
     type: 'bar',
     data: {
-      labels: top15.map(function(t){return t.sym;}),
+      labels: top15.map(function(t){ return t.pair || t.sym; }),
       datasets: [{
         label: 'Vol/MC %',
-        data: top15.map(function(t){return parseFloat((t.ratio*100).toFixed(1));}),
+        data: top15.map(function(t){ return parseFloat((t.ratio*100).toFixed(1)); }),
         backgroundColor: top15.map(function(t){
+          if(isBybit) return 'rgba(247,166,0,0.5)';
           return t.ratio>=0.20 ? 'rgba(0,255,136,.5)' : t.ratio>=0.10 ? 'rgba(0,212,255,.5)' : 'rgba(255,221,68,.5)';
         }),
         borderColor: top15.map(function(t){
+          if(isBybit) return '#f7a600';
           return t.ratio>=0.20 ? '#00ff88' : t.ratio>=0.10 ? '#00d4ff' : '#ffdd44';
         }),
         borderWidth: 1, borderRadius: 2
@@ -1050,21 +1369,39 @@ function renderSectorChart(){
   var ctx = canvas.getContext('2d');
   if(SC) SC.destroy();
 
-  var data = CATEGORY_DATA.slice(0, 7);
-  if(!data.length) return;
+  var labels = [], dataVals = [], colors = [];
+
+  if(CURRENT_MODE === 'bybit' && BYBIT_DATA.length > 0){
+    // Calculate Bybit Volume per category
+    var catTotals = {};
+    BYBIT_DATA.forEach(function(t){
+      var tag = (t.cat && t.cat.tag) ? t.cat.tag : 'TOKEN';
+      if(!catTotals[tag]) catTotals[tag] = 0;
+      catTotals[tag] += t.vol;
+    });
+    var sortedCats = Object.keys(catTotals).map(function(k){
+      return { name: k, vol: catTotals[k] };
+    }).sort(function(a,b){ return b.vol - a.vol; }).slice(0, 7);
+
+    labels = sortedCats.map(function(c){ return c.name; });
+    dataVals = sortedCats.map(function(c){ return parseFloat((c.vol / 1e6).toFixed(1)); });
+    colors = sortedCats.map(function(c, i){ return i === 0 ? '#f7a600' : '#00d4ff'; });
+  } else {
+    var data = CATEGORY_DATA.slice(0, 7);
+    if(!data.length) return;
+    labels = data.map(function(s){ return s.icon + ' ' + s.name; });
+    dataVals = data.map(function(s){ return parseFloat(s.ratio.toFixed(1)); });
+    colors = data.map(function(s, idx){ return idx === 0 ? '#00ff88' : '#00d4ff'; });
+  }
 
   SC = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: data.map(function(s){ return s.icon + ' ' + s.name; }),
+      labels: labels,
       datasets: [{
-        data: data.map(function(s){ return parseFloat(s.ratio.toFixed(1)); }),
-        backgroundColor: data.map(function(s, idx){
-          return idx === 0 ? 'rgba(0,255,136,.6)' : 'rgba(0,212,255,.4)';
-        }),
-        borderColor: data.map(function(s, idx){
-          return idx === 0 ? '#00ff88' : '#00d4ff';
-        }),
+        data: dataVals,
+        backgroundColor: colors.map(function(c){ return c + '66'; }),
+        borderColor: colors,
         borderWidth: 1, borderRadius: 2
       }]
     },
@@ -1076,12 +1413,15 @@ function renderSectorChart(){
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: function(c){ return ' Sector Vol/MC: ' + c.raw + '%'; }
+            label: function(c){
+              if(CURRENT_MODE === 'bybit') return ' Bybit 24H Volume: $' + c.raw + 'M';
+              return ' Sector Vol/MC: ' + c.raw + '%';
+            }
           }
         }
       },
       scales: {
-        x: { grid: { color: '#1a2740' }, ticks: { color: '#607090', font: { family: 'Courier New', size: 8 }, callback: function(v){return v+'%';} } },
+        x: { grid: { color: '#1a2740' }, ticks: { color: '#607090', font: { family: 'Courier New', size: 8 }, callback: function(v){ return (CURRENT_MODE==='bybit')?'$'+v+'M':v+'%'; } } },
         y: { grid: { color: '#1a2740' }, ticks: { color: '#c8d8f0', font: { family: 'Courier New', size: 9 } } }
       }
     }
@@ -1090,19 +1430,24 @@ function renderSectorChart(){
 
 /* ── MOVERS ───────────────────── */
 function renderMovers(){
-  var sorted = [...TOP50].filter(function(t){return t.c24!=null;}).sort(function(a,b){return b.c24-a.c24;});
+  var source = (CURRENT_MODE === 'bybit') ? BYBIT_RENDER : TOP50;
+  var sorted = [...source].filter(function(t){return t.c24!=null;}).sort(function(a,b){return b.c24-a.c24;});
   var gain = sorted.slice(0, 5);
   var loss = sorted.slice(-5).reverse();
 
   document.getElementById('gainers').innerHTML = gain.map(function(t,i){
     var rc = rC(t.ratio);
-    return '<div class="mr"><div class="ml"><span class="mrk">'+(i+1)+'</span><img src="'+t.img+'" width="18" height="18" style="border-radius:50%" onerror="this.style.display=\'none\'"/><span class="ms">'+t.sym+'</span><span class="mm">'+fmt(t.mc)+'</span></div>'+
+    return '<div class="mr"><div class="ml"><span class="mrk">'+(i+1)+'</span>' +
+    (t.img ? '<img src="'+t.img+'" width="18" height="18" style="border-radius:50%" onerror="this.style.display=\'none\'"/>' : '<span style="color:var(--BY);font-weight:700;font-size:10px">&#9670;</span>') +
+    '<span class="ms">'+(t.pair||t.sym)+'</span><span class="mm">'+(t.mc>0?fmt(t.mc):'')+'</span></div>'+
     '<div style="display:flex;align-items:center;gap:6px"><span class="bdg bag'+rc+'">'+(t.ratio*100).toFixed(1)+'% V/MC</span><span class="mp up">&#9650; '+t.c24.toFixed(2)+'%</span></div></div>';
   }).join('');
 
   document.getElementById('losers').innerHTML = loss.map(function(t,i){
     var rc = rC(t.ratio);
-    return '<div class="mr"><div class="ml"><span class="mrk">'+(i+1)+'</span><img src="'+t.img+'" width="18" height="18" style="border-radius:50%" onerror="this.style.display=\'none\'"/><span class="ms">'+t.sym+'</span><span class="mm">'+fmt(t.mc)+'</span></div>'+
+    return '<div class="mr"><div class="ml"><span class="mrk">'+(i+1)+'</span>' +
+    (t.img ? '<img src="'+t.img+'" width="18" height="18" style="border-radius:50%" onerror="this.style.display=\'none\'"/>' : '<span style="color:var(--BY);font-weight:700;font-size:10px">&#9670;</span>') +
+    '<span class="ms">'+(t.pair||t.sym)+'</span><span class="mm">'+(t.mc>0?fmt(t.mc):'')+'</span></div>'+
     '<div style="display:flex;align-items:center;gap:6px"><span class="bdg bag'+rc+'">'+(t.ratio*100).toFixed(1)+'% V/MC</span><span class="mp dn">&#9660; '+Math.abs(t.c24).toFixed(2)+'%</span></div></div>';
   }).join('');
 }
