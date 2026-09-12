@@ -10,7 +10,7 @@
     :root{
       --bg:#040810;--bg2:#080f1c;--bg3:#0d1626;
       --b1:#1a2740;--b2:#243350;
-      --G:#00ff88;--C:#00d4ff;--R:#ff4466;--O:#ff9933;--Y:#ffdd44;--P:#b844ff;
+      --G:#00ff88;--C:#00d4ff;--R:#ff4466;--O:#ff9933;--Y:#ffdd44;--P:#b844ff;--B:#38bdf8;
       --t:#c8d8f0;--td:#607090;--tm:#3a4e6a;
       --f:"Courier New",Courier,monospace;
       --cb:rgba(13,22,38,.85)
@@ -62,12 +62,29 @@
     .hc::before{content:"";position:absolute;top:0;left:0;right:0;height:2px}
     .cg::before{background:var(--G)}.cc::before{background:var(--C)}.co::before{background:var(--O)}.cy::before{background:var(--Y)}.cr::before{background:var(--P)}
     .hl{font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tm);margin-bottom:6px}
-    .hv{font-size:20px;font-weight:700}
+    .hv{font-size:19px;font-weight:700}
     .hv.g{color:var(--G)}.hv.c{color:var(--C)}.hv.o{color:var(--O)}.hv.y{color:var(--Y)}.hv.p{color:var(--P)}
     .hs{font-size:9.5px;color:var(--td);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     /* MAIN */
     #main{padding:16px 20px}
+
+    /* STABLECOIN RADAR BANNER */
+    #stable-radar{background:linear-gradient(180deg, rgba(8,15,28,0.95), rgba(13,22,38,0.85));border:1px solid var(--b1);border-radius:8px;padding:12px 16px;margin-bottom:14px;position:relative;overflow:hidden}
+    #stable-radar::before{content:"";position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--C)}
+    .sr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+    .sr-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--C);display:flex;align-items:center;gap:8px}
+    .sr-badge{font-size:9px;padding:3px 8px;border-radius:3px;font-weight:700;letter-spacing:1px}
+    .sr-inflow{background:rgba(0,255,136,0.12);color:var(--G);border:1px solid rgba(0,255,136,0.4)}
+    .sr-outflow{background:rgba(255,68,102,0.12);color:var(--R);border:1px solid rgba(255,68,102,0.4)}
+    .sr-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr;gap:12px;align-items:center}
+    .sr-stat{background:var(--bg3);border:1px solid var(--b1);border-radius:6px;padding:8px 12px}
+    .sr-stat-lbl{font-size:8.5px;color:var(--tm);text-transform:uppercase;letter-spacing:1px}
+    .sr-stat-val{font-size:16px;font-weight:700;color:var(--t);margin-top:3px}
+    .sr-stat-sub{font-size:9px;color:var(--td);margin-top:2px}
+    .sr-chart-box{background:var(--bg3);border:1px solid var(--b1);border-radius:6px;padding:8px 12px;height:75px;display:flex;flex-direction:column;justify-content:center}
+    .sr-toggle-btn{background:transparent;border:1px solid var(--b2);color:var(--td);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--f);font-size:9px;transition:all .2s;margin-left:auto}
+    .sr-toggle-btn:hover{color:var(--C);border-color:var(--C)}
 
     /* CATEGORY PILLS BAR */
     #cat-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--b1);border-radius:8px;padding:8px 12px;overflow-x:auto}
@@ -120,6 +137,17 @@
     .mcp{font-size:10.5px;color:var(--td)}
     .cc{font-size:11px;font-weight:700}
 
+    /* CATEGORY TAG BADGES IN TABLE */
+    .cbadge{font-size:7.5px;letter-spacing:.5px;padding:1px 5px;border-radius:2px;font-weight:700;display:inline-block}
+    .cat-ai{background:rgba(0,212,255,.12);color:var(--C);border:1px solid rgba(0,212,255,.4)}
+    .cat-meme{background:rgba(255,153,51,.12);color:var(--O);border:1px solid rgba(255,153,51,.4)}
+    .cat-l1{background:rgba(0,255,136,.12);color:var(--G);border:1px solid rgba(0,255,136,.4)}
+    .cat-l2{background:rgba(56,189,248,.12);color:var(--B);border:1px solid rgba(56,189,248,.4)}
+    .cat-defi{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.4)}
+    .cat-game{background:rgba(244,63,94,.12);color:#fb7185;border:1px solid rgba(244,63,94,.4)}
+    .cat-rwa{background:rgba(255,221,68,.12);color:var(--Y);border:1px solid rgba(255,221,68,.4)}
+    .cat-tok{background:rgba(96,112,144,.1);color:var(--tm);border:1px solid var(--b1)}
+
     /* QUICK LINKS (DEX / CG) */
     .qlink{font-size:8px;text-decoration:none;padding:1px 4px;border-radius:2px;letter-spacing:.5px;transition:all .15s}
     .qlink-dex{color:var(--C);border:1px solid rgba(0,212,255,.3)}
@@ -159,6 +187,10 @@
     .csub{font-size:8.5px;color:var(--tm)}
     .cbody-compact{padding:10px 12px;height:140px;position:relative}
 
+    /* STABLECOINS MODAL / EXPANDER */
+    #stable-table-wrap{display:none;margin-top:12px;background:var(--bg2);border:1px solid var(--b1);border-radius:6px;overflow:hidden}
+    #stable-table-wrap.open{display:block}
+
     /* MOVERS 2-COL */
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
     .mr{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(26,39,64,.35);transition:background .15s}
@@ -173,8 +205,8 @@
     #ft{border-top:1px solid var(--b1);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;margin-top:16px;color:var(--tm);font-size:9.5px;flex-wrap:wrap;gap:8px}
     a.fl{color:var(--td);text-decoration:none}a.fl:hover{color:var(--G)}
 
-    @media(max-width:1150px){#hero{grid-template-columns:repeat(3,1fr)}.g3{grid-template-columns:1fr}}
-    @media(max-width:750px){#hero{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}.spc{display:none}}
+    @media(max-width:1150px){#hero{grid-template-columns:repeat(3,1fr)}.g3{grid-template-columns:1fr}.sr-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:750px){#hero{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}.sr-grid{grid-template-columns:1fr}.spc{display:none}}
   </style>
 </head>
 <body>
@@ -182,7 +214,7 @@
 <!-- TICKER -->
 <div id="tw">
   <div id="tl">&#9672; SCANX</div>
-  <div style="overflow:hidden;flex:1"><div id="tc"><span class="ti"><span class="s">Initializing scanner...</span></span></div></div>
+  <div style="overflow:hidden;flex:1"><div id="tc"><span class="ti"><span class="s">Initializing hunter...</span></span></div></div>
 </div>
 
 <!-- NAV -->
@@ -214,7 +246,7 @@
   <div class="hc cg">
     <div class="hl">Market Scanned</div>
     <div class="hv g" id="h-scanned">&#8212;</div>
-    <div class="hs" id="h-scanned-s">tokens analyzed</div>
+    <div class="hs" id="h-scanned-s">tokens analyzed (no stables)</div>
   </div>
   <div class="hc cc">
     <div class="hl">Top Vol/MC Hunter</div>
@@ -228,7 +260,7 @@
   </div>
   <div class="hc cy">
     <div class="hl">Hottest Sector Vibe</div>
-    <div class="hv y" id="h-hotsector" style="font-size:17px">&#8212;</div>
+    <div class="hv y" id="h-hotsector" style="font-size:16px">&#8212;</div>
     <div class="hs" id="h-hotsector-sub">Sector Vol/MC activity</div>
   </div>
   <div class="hc cr">
@@ -240,6 +272,53 @@
 
 <!-- MAIN -->
 <div id="main">
+
+  <!-- STABLECOIN MACRO LIQUIDITY RADAR -->
+  <div id="stable-radar">
+    <div class="sr-header">
+      <div class="sr-title">
+        <span>&#128181; STABLECOIN MACRO LIQUIDITY RADAR</span>
+        <span class="sr-badge sr-inflow" id="sr-status-badge">&#9679; CAPITAL INFLOW DETECTED</span>
+      </div>
+      <button class="sr-toggle-btn" onclick="toggleStableTable()">[ &#128065; TOGGLE STABLECOIN LIST ]</button>
+    </div>
+    <div class="sr-grid">
+      <div class="sr-stat">
+        <div class="sr-stat-lbl">Total Stablecoin MCap</div>
+        <div class="sr-stat-val" id="sr-mcap">&#8212;</div>
+        <div class="sr-stat-sub" id="sr-mcap-chg">24H Net Inflow: &#8212;</div>
+      </div>
+      <div class="sr-stat">
+        <div class="sr-stat-lbl">24H Stablecoin Volume</div>
+        <div class="sr-stat-val" id="sr-vol">&#8212;</div>
+        <div class="sr-stat-sub" id="sr-turnover">Turnover Ratio: &#8212;</div>
+      </div>
+      <div class="sr-stat">
+        <div class="sr-stat-lbl">Liquidity Flow Signal</div>
+        <div class="sr-stat-val" id="sr-signal" style="color:var(--G);font-size:14px">FRESH CAPITAL</div>
+        <div class="sr-stat-sub" id="sr-signal-sub">Fiat minting to crypto</div>
+      </div>
+      <div class="sr-chart-box">
+        <canvas id="stables-chart" height="55"></canvas>
+      </div>
+    </div>
+
+    <!-- EXPANDABLE STABLECOINS TABLE -->
+    <div id="stable-table-wrap">
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead>
+          <tr style="background:var(--bg3);border-bottom:1px solid var(--b1);color:var(--tm);text-align:left">
+            <th style="padding:6px 10px">STABLECOIN</th>
+            <th style="padding:6px 10px">MARKET CAP</th>
+            <th style="padding:6px 10px">24H VOLUME</th>
+            <th style="padding:6px 10px">VOL / MC</th>
+            <th style="padding:6px 10px">MARKET SHARE</th>
+          </tr>
+        </thead>
+        <tbody id="stable-tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <!-- CATEGORY PILLS BAR -->
   <div id="cat-bar-wrap">
@@ -261,7 +340,7 @@
   <!-- CONTROLS -->
   <div id="ctrl">
     <span class="cl">SEARCH:</span>
-    <input id="sb" type="text" placeholder="Symbol or name..." oninput="filterRender()"/>
+    <input id="sb" type="text" placeholder="Symbol, name, or sector..." oninput="filterRender()"/>
     
     <span class="cl" style="margin-left:6px">DEPTH:</span>
     <select class="fsel" id="depsel">
@@ -299,16 +378,16 @@
   <!-- TABLE -->
   <div id="tw2">
     <div class="tbar">
-      <div class="ttl">&#9672; VOL/MC HUNTER &#8212; TOP MOVERS <span id="active-cat-tag" style="color:var(--G);font-size:9px"></span></div>
+      <div class="ttl">&#9672; VOL/MC HUNTER &#8212; TOP MOVERS (STABLES EXCLUDED) <span id="active-cat-tag" style="color:var(--G);font-size:9px"></span></div>
       <span class="tsub" id="tbl-meta">Ready to scan</span>
     </div>
-    <div id="ldbox"><div class="spn"></div><div id="ld-txt">Initializing hunter...</div><div id="ld-sub">Scanning crypto market for highest Vol/MC anomalies</div></div>
+    <div id="ldbox"><div class="spn"></div><div id="ld-txt">Initializing hunter...</div><div id="ld-sub">Scanning crypto market for highest Vol/MC anomalies (excluding stablecoins)</div></div>
     <div id="erbox">&#9888; Scan connection issue. Please retry.</div>
     <table id="mt" style="display:none">
       <thead>
         <tr>
           <th style="width:45px">RANK</th>
-          <th onclick="SRT('name')">TOKEN</th>
+          <th onclick="SRT('name')">TOKEN & SECTOR</th>
           <th onclick="SRT('mc')">MARKET CAP</th>
           <th onclick="SRT('vol')">24H VOLUME</th>
           <th onclick="SRT('ratio')" class="sd">VOL / MC &#8597;</th>
@@ -372,11 +451,75 @@
 </div>
 
 <script>
-var ALLDATA=[], TOP50=[], CATEGORY_DATA=[];
+var ALLDATA=[], TOP50=[], CATEGORY_DATA=[], STABLE_DATA=[];
 var CURRENT_CAT='', CURRENT_PRESET='all';
 var SK='ratio', SD='desc';
-var DC=null, BC=null, SC=null;
+var DC=null, BC=null, SC=null, STC=null;
 var NEXT_SCAN=3600, NST=null, SCANNING=false;
+
+/* ── STABLECOINS DETECTION ───── */
+var STABLE_SYMS = new Set([
+  'USDT','USDC','USDS','USDE','DAI','FDUSD','TUSD','USDD','FRAX','PYUSD','RLUSD',
+  'USD1','USDG','USDGO','USDF','BFUSD','U','GHO','BUSD','LUSD','CRVUSD','EURC',
+  'USTC','CUSD','OUSD','MIM','ALUSD','DOLA','SUSD','VUSD','GUSD','USDP','EURS','EURA','USDX','USDJ'
+]);
+
+function isStable(t){
+  var sym = (t.sym || '').toUpperCase();
+  var id = (t.id || '').toLowerCase();
+  var name = (t.name || '').toLowerCase();
+  var p = t.price || 0;
+  if(STABLE_SYMS.has(sym)) return true;
+  if(sym.indexOf('USD') >= 0 || id.indexOf('usd') >= 0 || name.indexOf('usd') >= 0 || name.indexOf('tether') >= 0 || id.indexOf('stable') >= 0){
+    if(p >= 0.85 && p <= 1.15) return true;
+  }
+  if(p >= 0.98 && p <= 1.02 && t.ath <= 1.25 && t.atl >= 0.75) return true;
+  return false;
+}
+
+/* ── SECTOR DETECTOR ──────────── */
+function detectCategory(t){
+  var sym = (t.sym || '').toUpperCase();
+  var id = (t.id || '').toLowerCase();
+  var name = (t.name || '').toLowerCase();
+
+  /* MEME */
+  if(/doge|shib|pepe|wif|bonk|floki|bome|mog|popcat|brett|mew|neiro|goat|stonk|meme|moon|frog|cat|inu|wojak|degen|pnut|lab|fidd|niu|cow|trump|kamala|elon|baby|marscoin/i.test(name) ||
+     /^(DOGE|PEPE|SHIB|WIF|BONK|BOME|MOG|MEW|GOAT|STONK|PNUT|LAB|FIDD|TURBO|LADYS|BABYDOGE|SPX|SLERF|PONKE|MYRO|COQ|WOJAK|WEN|SAMO|PEOPLE|TOSHI|ACT|CHILLGUY)$/i.test(sym)){
+    return { tag: 'MEME', cls: 'cat-meme' };
+  }
+  /* AI */
+  if(/ai|artificial|neural|agent|gpt|bot|compute|gpu|intel|render|tensor|virtual|holoworld|holo|bittensor|fetch/i.test(name) ||
+     /^(AI|TAO|FET|RNDR|RENDER|AKT|AGIX|OCEAN|NOS|IO|VIRTUAL|HOLO|WLD|GRT|ARKM|SPEC|ALI|ORAI|NMR|PRIME|GPT|AIOZ|PHA)$/i.test(sym)){
+    return { tag: 'AI', cls: 'cat-ai' };
+  }
+  /* LAYER 2 */
+  if(/layer.?2|rollup|optimism|arbitrum|starknet|zksync|polygon|manta|blast|scroll|base|metis|boba|linea|coti|lisk/i.test(name) ||
+     /^(ARB|OP|POL|MATIC|MANTA|STRK|BLAST|ZK|IMX|METIS|BOBA|COTI|LSK|MODE|TAIKO)$/i.test(sym)){
+    return { tag: 'L2', cls: 'cat-l2' };
+  }
+  /* LAYER 1 */
+  if(/layer.?1|blockchain|chain|network|protocol|solana|ethereum|bitcoin|cardano|avalanche|polkadot|cosmos|sui|aptos|near|kaspa|tron|fantom|vechain/i.test(name) ||
+     /^(BTC|ETH|SOL|BNB|ADA|AVAX|DOT|TRX|TON|SUI|APT|KAS|ATOM|ALGO|XLM|XRP|HBAR|ICP|NEAR|SEI|TIA|INJ|FTM|VTHO|EGLD|FLOW|KAVA|MINA|OSMO)$/i.test(sym)){
+    return { tag: 'L1', cls: 'cat-l1' };
+  }
+  /* DEFI */
+  if(/defi|swap|dex|finance|lend|borrow|yield|vault|stake|liquidity|curve|uniswap|aave|maker|pancake|dydx|blur/i.test(name) ||
+     /^(UNI|AAVE|MKR|CRV|LDO|SNX|COMP|SUSHI|RAY|CAKE|DYDX|JUP|PENDLE|RUNE|ENA|JTO|BLUR|MKT|SPYX|1INCH|BAL|CVX|GMX|FXS|YFI)$/i.test(sym)){
+    return { tag: 'DEFI', cls: 'cat-defi' };
+  }
+  /* GAMING */
+  if(/game|play|metaverse|arcade|quest|guild|axie|sandbox|decentraland|gala|ronin|pixel/i.test(name) ||
+     /^(AXS|SAND|MANA|GALA|RON|BEAM|PIXEL|PORTAL|ILV|YGG|ENJ|GRE|MAGIC|SUPER|ALICE|APE)$/i.test(sym)){
+    return { tag: 'GAMING', cls: 'cat-game' };
+  }
+  /* RWA / DePIN */
+  if(/rwa|real.?world|depin|helium|arweave|filecoin|iot/i.test(name) ||
+     /^(ONDO|OM|CFG|POLYX|FIL|AR|HNT|THETA|HONEY|MOBILE|IOTX|DIMO|WIFI|RIO|MPL)$/i.test(sym)){
+    return { tag: 'RWA', cls: 'cat-rwa' };
+  }
+  return { tag: 'TOKEN', cls: 'cat-tok' };
+}
 
 /* ── FORMATTERS ───────────────── */
 function fmt(n){
@@ -418,28 +561,29 @@ async function startScan(){
   showLoading(true);
   if(NST)clearInterval(NST);
 
-  /* Parallel: Fetch sector vibe data */
+  /* Parallel: Fetch sector vibe + stablecoins macro */
   fetchSectorVibe();
+  fetchStablecoinsMacro();
 
   var pages=parseInt(document.getElementById('depsel').value)||10;
-  var perPage=250; /* 250 is maximum per page in CoinGecko */
-  if(CURRENT_CAT) pages = Math.min(pages, 4); /* categories have fewer coins */
+  var perPage=250;
+  if(CURRENT_CAT) pages = Math.min(pages, 4);
 
-  var allToks=[];
+  var rawToks=[];
   var failedStreak=0;
 
   for(var p=1; p<=pages; p++){
     var pct=Math.round((p/pages)*100);
-    setProgress(pct, 'Page '+p+'/'+pages+' ('+((p-1)*perPage + allToks.length)+' tokens)');
+    setProgress(pct, 'Page '+p+'/'+pages+' ('+((p-1)*perPage + rawToks.length)+' tokens)');
     document.getElementById('ld-txt').textContent='Scanning '+(CURRENT_CAT?CURRENT_CAT:'entire market')+' page '+p+' of '+pages+'...';
-    document.getElementById('ld-sub').textContent=allToks.length+' tokens processed';
+    document.getElementById('ld-sub').textContent=rawToks.length+' tokens processed';
 
     var base='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page='+perPage+'&page='+p+'&sparkline=true&price_change_percentage=24h,7d';
     if(CURRENT_CAT) base += '&category=' + encodeURIComponent(CURRENT_CAT);
 
     var data = await fetchSafe(base, 11000);
     if(data && Array.isArray(data) && data.length > 0){
-      allToks = allToks.concat(data);
+      rawToks = rawToks.concat(data);
       failedStreak = 0;
     } else {
       failedStreak++;
@@ -449,8 +593,12 @@ async function startScan(){
     if(p < pages) await new Promise(function(r){setTimeout(r, 650);});
   }
 
-  ALLDATA = allToks.map(function(t){
-    return {
+  /* Process tokens & filter out stablecoins from Hunter list */
+  var hunterCoins=[];
+  var stablesCollected=[];
+
+  rawToks.forEach(function(t){
+    var item = {
       id: t.id,
       name: t.name,
       sym: (t.symbol||'').toUpperCase(),
@@ -461,14 +609,29 @@ async function startScan(){
       mc: t.market_cap || 0,
       vol: t.total_volume || 0,
       ratio: t.market_cap ? (t.total_volume / t.market_cap) : 0,
-      spark: (t.sparkline_in_7d && t.sparkline_in_7d.price ? t.sparkline_in_7d.price : [])
+      spark: (t.sparkline_in_7d && t.sparkline_in_7d.price ? t.sparkline_in_7d.price : []),
+      ath: t.ath || 0,
+      atl: t.atl || 0
     };
+
+    if(isStable(item)){
+      stablesCollected.push(item);
+    } else {
+      item.cat = detectCategory(item);
+      hunterCoins.push(item);
+    }
   });
+
+  ALLDATA = hunterCoins;
+  if(stablesCollected.length > 0){
+    STABLE_DATA = stablesCollected;
+    renderStablesMacro();
+  }
 
   SCANNING=false;
   btn.disabled=false;
   btn.innerHTML='&#9654; SCAN NOW';
-  setProgress(100, 'Scan complete &#9679; '+ALLDATA.length+' tokens analyzed');
+  setProgress(100, 'Scan complete &#9679; '+ALLDATA.length+' volatile tokens analyzed (stables excluded)');
 
   var now = new Date();
   document.getElementById('h-time').textContent = now.toLocaleTimeString();
@@ -498,6 +661,121 @@ async function startScan(){
 function setProgress(pct, txt){
   document.getElementById('progress-bar').style.width = pct + '%';
   document.getElementById('scan-status').innerHTML = txt;
+}
+
+/* ── STABLECOINS MACRO RADAR ─── */
+async function fetchStablecoinsMacro(){
+  var cats = await fetchSafe('https://api.coingecko.com/api/v3/coins/categories', 10000);
+  if(cats && Array.isArray(cats)){
+    var st = cats.find(function(c){ return c.id === 'stablecoins'; });
+    if(st){
+      var mc = st.market_cap || 0;
+      var vol = st.volume_24h || 0;
+      var chg = st.market_cap_change_24h || 0;
+
+      document.getElementById('sr-mcap').textContent = fmt(mc);
+      var isInflow = chg >= 0;
+      var chgEl = document.getElementById('sr-mcap-chg');
+      chgEl.innerHTML = '24H MCap Change: <span class="' + (isInflow?'up':'dn') + '">' + (isInflow?'▲ +':'▼ ') + chg.toFixed(2) + '%</span>';
+      
+      document.getElementById('sr-vol').textContent = fmt(vol);
+      var turnover = mc > 0 ? ((vol / mc) * 100).toFixed(1) + '%' : '&#8212;';
+      document.getElementById('sr-turnover').textContent = '24H Turnover: ' + turnover;
+
+      var badge = document.getElementById('sr-status-badge');
+      var sig = document.getElementById('sr-signal');
+      var sigSub = document.getElementById('sr-signal-sub');
+      if(isInflow){
+        badge.className = 'sr-badge sr-inflow';
+        badge.innerHTML = '&#9679; FRESH CAPITAL INFLOW (BULLISH)';
+        sig.textContent = 'CAPITAL INFLOW';
+        sig.style.color = 'var(--G)';
+        sigSub.textContent = 'Fiat entering crypto market';
+      } else {
+        badge.className = 'sr-badge sr-outflow';
+        badge.innerHTML = '&#9679; CAPITAL OUTFLOW DETECTED';
+        sig.textContent = 'CAPITAL OUTFLOW';
+        sig.style.color = 'var(--R)';
+        sigSub.textContent = 'Fiat exiting / redeeming';
+      }
+    }
+  }
+
+  /* Fetch top individual stablecoins for breakdown */
+  var stablesList = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=stablecoins&per_page=20&page=1', 10000);
+  if(stablesList && Array.isArray(stablesList) && stablesList.length > 0){
+    STABLE_DATA = stablesList.map(function(s){
+      return {
+        sym: (s.symbol||'').toUpperCase(),
+        name: s.name,
+        mc: s.market_cap || 0,
+        vol: s.total_volume || 0,
+        ratio: s.market_cap ? (s.total_volume / s.market_cap) : 0
+      };
+    });
+    renderStablesMacro();
+  }
+}
+
+function renderStablesMacro(){
+  if(!STABLE_DATA || !STABLE_DATA.length) return;
+
+  /* Render Mini Horizontal Volume Bar Chart */
+  var canvas = document.getElementById('stables-chart');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if(STC) STC.destroy();
+
+  var topStables = STABLE_DATA.slice(0, 5);
+  STC = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: topStables.map(function(s){ return s.sym; }),
+      datasets: [{
+        data: topStables.map(function(s){ return parseFloat((s.vol / 1e9).toFixed(2)); }),
+        backgroundColor: ['#00ff88','#00d4ff','#38bdf8','#b844ff','#ff9933'],
+        borderRadius: 2
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(c){ return ' 24H Volume: $' + c.raw + 'B'; }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1a2740' }, ticks: { color: '#607090', font: { family: 'Courier New', size: 7 }, callback: function(v){return '$'+v+'B';} } },
+        y: { grid: { color: '#1a2740' }, ticks: { color: '#c8d8f0', font: { family: 'Courier New', size: 8 } } }
+      }
+    }
+  });
+
+  /* Fill expandable table */
+  var totalVol = STABLE_DATA.reduce(function(s,t){ return s + t.vol; }, 0);
+  var tbody = document.getElementById('stable-tbody');
+  if(tbody){
+    tbody.innerHTML = STABLE_DATA.slice(0, 10).map(function(s){
+      var share = totalVol > 0 ? ((s.vol / totalVol) * 100).toFixed(1) + '%' : '&#8212;';
+      return '<tr style="border-bottom:1px solid rgba(26,39,64,0.3)">' +
+        '<td style="padding:5px 10px;font-weight:700;color:var(--t)">' + s.sym + ' <span style="color:var(--tm);font-weight:normal">' + s.name + '</span></td>' +
+        '<td style="padding:5px 10px;color:var(--td)">' + fmt(s.mc) + '</td>' +
+        '<td style="padding:5px 10px;color:var(--C);font-weight:700">' + fmt(s.vol) + '</td>' +
+        '<td style="padding:5px 10px;color:var(--G)">' + (s.ratio * 100).toFixed(1) + '%</td>' +
+        '<td style="padding:5px 10px;color:var(--t)">' + share + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+}
+
+function toggleStableTable(){
+  var el = document.getElementById('stable-table-wrap');
+  el.classList.toggle('open');
 }
 
 /* ── SECTOR VIBE MATCHER ──────── */
@@ -573,7 +851,7 @@ function filterRender(){
 
   var filtered = ALLDATA.filter(function(t){
     var mok = t.mc >= minMC;
-    var qok = !q || t.sym.toLowerCase().indexOf(q)>=0 || t.name.toLowerCase().indexOf(q)>=0;
+    var qok = !q || t.sym.toLowerCase().indexOf(q)>=0 || t.name.toLowerCase().indexOf(q)>=0 || (t.cat && t.cat.tag.toLowerCase().indexOf(q)>=0);
     var pok = true;
     if(CURRENT_PRESET === 'hot') pok = (t.ratio >= 0.50);
     else if(CURRENT_PRESET === 'pump') pok = (t.ratio >= 0.20 && (t.c24||0) >= 10);
@@ -585,7 +863,7 @@ function filterRender(){
 
   renderTable();
   document.getElementById('tbl-meta').textContent =
-    'Showing top ' + TOP50.length + ' Vol/MC from ' + ALLDATA.length + ' scanned tokens';
+    'Showing top ' + TOP50.length + ' Vol/MC from ' + ALLDATA.length + ' scanned tokens (no stables)';
   document.getElementById('nav-scanned').textContent = ALLDATA.length.toLocaleString();
 }
 
@@ -634,6 +912,7 @@ function renderTable(){
     var su = c24 >= 0 ? 'up' : 'dn', s7 = c7d >= 0 ? 'up' : 'dn';
     var au = c24 >= 0 ? '&#9650;' : '&#9660;', a7 = c7d >= 0 ? '&#9650;' : '&#9660;';
     var rkcls = i===0?'hr1':i===1?'hr2':i===2?'hr3':'hrn';
+    var cat = t.cat || { tag: 'TOKEN', cls: 'cat-tok' };
 
     return '<tr>'+
       '<td><div class="hotrank ' + rkcls + '">' + (i+1) + '</div></td>'+
@@ -642,6 +921,7 @@ function renderTable(){
         '<div class="tnames">'+
           '<div style="display:flex;align-items:center;gap:6px">'+
             '<span class="tsym">' + t.sym + '</span>'+
+            '<span class="cbadge ' + cat.cls + '">' + cat.tag + '</span>'+
             '<a class="qlink qlink-dex" href="https://dexscreener.com/search?q=' + encodeURIComponent(t.sym) + '" target="_blank" title="DexScreener Live Candles">DEX &#8599;</a>'+
             '<a class="qlink qlink-cg" href="https://www.coingecko.com/en/coins/' + t.id + '" target="_blank" title="CoinGecko Profile">CG &#8599;</a>'+
           '</div>'+
