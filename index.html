@@ -486,7 +486,7 @@ var CG_MAP = {}; // fast symbol -> coin mapping
 var CURRENT_CAT = '', CURRENT_PRESET = 'all';
 var SK = 'ratio', SD = 'desc';
 var DC = null, BC = null, SC = null, STC = null;
-var NEXT_SCAN = 3600, NST = null, SCANNING = false;
+var NEXT_SCAN = 3600, NST = null, SCANNING = false, BYBIT_SCANNING = false;
 
 /* ── STABLECOINS DETECTION ───── */
 var STABLE_SYMS = new Set([
@@ -667,48 +667,65 @@ function triggerScan(){
 
 /* ── BYBIT SPOT SCANNER (100% COVERAGE) ── */
 async function scanBybit(){
-  if(SCANNING) return;
-  SCANNING = true;
+  if(BYBIT_SCANNING) return;
+  BYBIT_SCANNING = true;
   var btn = document.getElementById('rescan-btn');
   btn.disabled = true;
   btn.innerHTML = 'Scanning Bybit...';
   showLoading(true);
-  setProgress(20, 'Connecting to Bybit Public API v5...');
+  setProgress(25, 'Connecting to Bybit Public API v5...');
   document.getElementById('ld-txt').textContent = 'Fetching 100% of Bybit Spot instruments...';
   document.getElementById('ld-sub').textContent = 'Querying Bybit Spot tickers with zero exclusions';
 
   try {
-    var bybitUrl = 'https://api.bybit.com/v5/market/tickers?category=spot';
-    var res = await fetchSafe(bybitUrl, 8000);
-    if(!res || !res.result || !res.result.list){
-      throw new Error('Bybit API failed');
+    // Parallel fetch: instruments info for exact base/quote & tickers for 24h stats
+    var [instRes, tickRes] = await Promise.all([
+      fetchSafe('https://api.bybit.com/v5/market/instruments-info?category=spot', 8000),
+      fetchSafe('https://api.bybit.com/v5/market/tickers?category=spot', 8000)
+    ]);
+
+    var tickList = (tickRes && tickRes.result && tickRes.result.list) ? tickRes.result.list : [];
+    if(!tickList.length){
+      var solo = await fetchSafe('https://api.bybit.com/v5/market/tickers?category=spot', 8000);
+      tickList = (solo && solo.result && solo.result.list) ? solo.result.list : [];
+    }
+    if(!tickList.length){
+      throw new Error('Bybit API tickers unavailable');
     }
 
-    var list = res.result.list;
-    setProgress(60, 'Processing ' + list.length + ' Bybit Spot pairs...');
-
-    // If CoinGecko map not loaded yet, fetch CoinGecko quick map
-    if(Object.keys(CG_MAP).length === 0){
-      await fetchCGBasics();
+    var instMap = {};
+    if(instRes && instRes.result && instRes.result.list){
+      instRes.result.list.forEach(function(inst){
+        instMap[inst.symbol] = inst;
+      });
     }
+
+    setProgress(70, 'Consolidating ' + tickList.length + ' Bybit Spot instruments...');
 
     var tokenMap = {};
-    list.forEach(function(t){
+    var quotes = ['USDT', 'USDC', 'EUR', 'BTC', 'ETH', 'DAI', 'RLUSD', 'USD1', 'USDE', 'TRY', 'PLN', 'AED', 'BRL', 'USD', 'SOL'];
+
+    tickList.forEach(function(t){
       var pair = t.symbol || '';
       var base = '';
       var quote = '';
-      var quotes = ['USDT', 'USDC', 'EUR', 'BTC', 'ETH', 'DAI'];
-      for(var qi=0; qi<quotes.length; qi++){
-        var q = quotes[qi];
-        if(pair.endsWith(q)){
-          base = pair.slice(0, -q.length);
-          quote = q;
-          break;
-        }
-      }
-      if(!base) base = pair;
 
-      if(STABLE_SYMS.has(base)) return; // exclude stablecoins from Hunter list
+      if(instMap[pair]){
+        base = instMap[pair].baseCoin;
+        quote = instMap[pair].quoteCoin;
+      } else {
+        for(var qi = 0; qi < quotes.length; qi++){
+          var q = quotes[qi];
+          if(pair.endsWith(q)){
+            base = pair.slice(0, -q.length);
+            quote = q;
+            break;
+          }
+        }
+        if(!base) base = pair;
+      }
+
+      if(STABLE_SYMS.has(base)) return; // Exclude stablecoins from Hunter list
 
       var vol = parseFloat(t.turnover24h || 0);
       var price = parseFloat(t.lastPrice || 0);
@@ -730,7 +747,7 @@ async function scanBybit(){
       } else {
         tokenMap[base].vol += vol;
         tokenMap[base].pairs.push(pair);
-        if(quote === 'USDT'){
+        if(quote === 'USDT' || !tokenMap[base].primaryPair.endsWith('USDT')){
           tokenMap[base].primaryPair = pair;
           tokenMap[base].price = price;
           tokenMap[base].c24 = chg;
@@ -761,31 +778,53 @@ async function scanBybit(){
 
     BYBIT_DATA = bybitCoins;
     document.getElementById('badge-bybit-cnt').textContent = BYBIT_DATA.length + ' TOKENS (100% BYBIT)';
-    setProgress(100, 'Bybit Scan Complete &#9679; ' + BYBIT_DATA.length + ' unique tokens analyzed across all 538 instruments');
+    setProgress(100, 'Bybit Scan Complete &#9679; ' + BYBIT_DATA.length + ' unique tokens analyzed across all ' + tickList.length + ' instruments');
 
     var now = new Date();
     document.getElementById('h-time').textContent = now.toLocaleTimeString();
-    document.getElementById('fu').textContent = 'Scanned ' + BYBIT_DATA.length + ' Bybit tokens (all 538 pairs) at ' + now.toLocaleTimeString();
+    document.getElementById('fu').textContent = 'Scanned ' + BYBIT_DATA.length + ' Bybit tokens (all ' + tickList.length + ' pairs) at ' + now.toLocaleTimeString();
+
+    // Background fetch of CoinGecko basics if CG_MAP is still empty
+    if(Object.keys(CG_MAP).length === 0 && !SCANNING){
+      fetchCGBasics().then(function(){
+        BYBIT_DATA.forEach(function(item){
+          var cg = CG_MAP[item.sym];
+          if(cg && item.mc === 0){
+            item.mc = cg.market_cap || 0;
+            if(!item.img && cg.image) item.img = cg.image;
+            if(item.name === item.sym && cg.name) item.name = cg.name;
+            if(item.mc > 0) item.ratio = item.vol / item.mc;
+          }
+        });
+        if(CURRENT_MODE === 'bybit'){
+          filterRender();
+          renderCharts();
+          renderMovers();
+        }
+      }).catch(function(){});
+    }
 
   } catch(e) {
-    console.error(e);
+    console.error('Bybit scan error:', e);
     document.getElementById('erbox').style.display = 'block';
+  } finally {
+    BYBIT_SCANNING = false;
+    btn.disabled = false;
+    btn.innerHTML = '&#9654; SCAN NOW';
+    if(CURRENT_MODE === 'bybit'){
+      filterRender();
+      updateHero();
+      renderTicker();
+      renderCharts();
+      renderMovers();
+    }
   }
-
-  SCANNING = false;
-  btn.disabled = false;
-  btn.innerHTML = '&#9654; SCAN NOW';
-  filterRender();
-  updateHero();
-  renderTicker();
-  renderCharts();
-  renderMovers();
 }
 
 async function fetchCGBasics(){
   try {
-    for(var p=1; p<=4; p++){
-      var data = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page='+p, 9000);
+    for(var p=1; p<=3; p++){
+      var data = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page='+p, 8000);
       if(data && Array.isArray(data)){
         data.forEach(function(c){
           var s = (c.symbol||'').toUpperCase();
@@ -878,20 +917,38 @@ async function startScan(){
     renderStablesMacro();
   }
 
-  SCANNING=false;
-  btn.disabled=false;
-  btn.innerHTML='&#9654; SCAN NOW';
-  setProgress(100, 'Scan complete &#9679; '+ALLDATA.length+' volatile tokens analyzed (stables excluded)');
+  SCANNING = false;
 
-  var now = new Date();
-  document.getElementById('h-time').textContent = now.toLocaleTimeString();
-  document.getElementById('fu').textContent = 'Scanned '+ALLDATA.length+' tokens at '+now.toLocaleTimeString();
+  if(BYBIT_DATA.length > 0){
+    BYBIT_DATA.forEach(function(item){
+      var cg = CG_MAP[item.sym];
+      if(cg && item.mc === 0){
+        item.mc = cg.market_cap || 0;
+        if(!item.img && cg.image) item.img = cg.image;
+        if(item.name === item.sym && cg.name) item.name = cg.name;
+        if(item.mc > 0) item.ratio = item.vol / item.mc;
+      }
+    });
+  }
 
-  filterRender();
-  updateHero();
-  renderTicker();
-  renderCharts();
-  renderMovers();
+  if(CURRENT_MODE === 'global'){
+    btn.disabled = false;
+    btn.innerHTML = '&#9654; SCAN NOW';
+    setProgress(100, 'Scan complete &#9679; ' + ALLDATA.length + ' volatile tokens analyzed (stables excluded)');
+    var now = new Date();
+    document.getElementById('h-time').textContent = now.toLocaleTimeString();
+    document.getElementById('fu').textContent = 'Scanned ' + ALLDATA.length + ' tokens at ' + now.toLocaleTimeString();
+    filterRender();
+    updateHero();
+    renderTicker();
+    renderCharts();
+    renderMovers();
+  } else {
+    filterRender();
+    updateHero();
+    renderCharts();
+    renderMovers();
+  }
 
   /* Countdown 1 Hour */
   NEXT_SCAN=3600;
@@ -1124,7 +1181,15 @@ function filterRender(){
     return mok && qok && catOk && pok;
   });
 
-  filtered.sort(function(a,b){ return b.ratio - a.ratio; });
+  filtered.sort(function(a,b){
+    if(CURRENT_MODE === 'bybit'){
+      if(b.ratio > 0 && a.ratio > 0) return b.ratio - a.ratio;
+      if(b.ratio > 0) return 1;
+      if(a.ratio > 0) return -1;
+      return b.vol - a.vol;
+    }
+    return b.ratio - a.ratio;
+  });
   var resultSlice = filtered.slice(0, topN);
 
   if(CURRENT_MODE === 'bybit'){
@@ -1150,9 +1215,9 @@ function updateHero(){
     document.getElementById('h-hot-sub').textContent = 'Bybit Vol/MC > 5%';
 
     if(BYBIT_RENDER.length > 0){
-      var best = BYBIT_RENDER[0];
-      document.getElementById('h-topratio').textContent = (best.ratio * 100).toFixed(2) + '%';
-      document.getElementById('h-toptoken').textContent = (best.pair || best.sym) + ' #1 Bybit Vol/MC';
+      var best = BYBIT_RENDER.find(function(t){ return t.ratio > 0; }) || BYBIT_RENDER[0];
+      document.getElementById('h-topratio').textContent = best.ratio > 0 ? (best.ratio * 100).toFixed(2) + '%' : fmt(best.vol);
+      document.getElementById('h-toptoken').textContent = (best.pair || best.sym) + (best.ratio > 0 ? ' #1 Bybit Vol/MC' : ' Top Vol');
     }
   } else {
     var hot = ALLDATA.filter(function(t){ return t.ratio >= 0.20; }).length;
@@ -1200,8 +1265,8 @@ function renderBybitTable(){
 
   tb.innerHTML = BYBIT_RENDER.map(function(t, i){
     var rc = (t.ratio >= 0.10)?'hot':(t.ratio>=0.03)?'high':(t.ratio>=0.01)?'mid':'low';
-    var rl = (t.ratio >= 0.10)?'HOT':(t.ratio>=0.03)?'HIGH':(t.ratio>=0.01)?'MID':'LOW';
-    var pct = (t.ratio * 100).toFixed(2);
+    var rl = (t.ratio >= 0.10)?'HOT':(t.ratio>=0.03)?'HIGH':(t.ratio>=0.01)?'MID':(t.ratio>0?'LOW':'&#8212;');
+    var pct = t.ratio > 0 ? (t.ratio * 100).toFixed(2) + '%' : '&#8212;';
     var c24 = t.c24 || 0;
     var su = c24 >= 0 ? 'up' : 'dn';
     var au = c24 >= 0 ? '&#9650;' : '&#9660;';
