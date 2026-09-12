@@ -677,11 +677,14 @@ async function fetchMarketCaps(){
         var sym = (item.symbol || '').toUpperCase();
         var usd = item.quotes && item.quotes.USD;
         var mc = usd ? (usd.market_cap || 0) : 0;
+        var logo = item.id ? ('https://static.coinpaprika.com/coin/' + item.id + '/logo.png') : '';
         if(mc > 0 && !MCAP_MAP[sym]){
           MCAP_MAP[sym] = {
+            id: item.id,
             mc: mc,
             name: item.name,
-            rank: item.rank
+            rank: item.rank,
+            img: logo
           };
         }
       });
@@ -800,7 +803,17 @@ async function scanBybit(){
       else if(pap && pap.mc > 0) mc = pap.mc;
 
       var name = (cg && cg.name) ? cg.name : ((pap && pap.name) ? pap.name : base);
-      var img = (cg && cg.image) ? cg.image : '';
+      var img = (cg && cg.image) ? cg.image : ((pap && pap.img) ? pap.img : ('https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/' + base.toLowerCase() + '.png'));
+
+      var quotePart = 'USDT';
+      if(item.primaryPair){
+        for(var qi = 0; qi < quotes.length; qi++){
+          if(item.primaryPair.endsWith(quotes[qi])){
+            quotePart = quotes[qi];
+            break;
+          }
+        }
+      }
 
       item.id = (cg && cg.id) ? cg.id : base.toLowerCase();
       item.pair = item.primaryPair || (base + '/USDT');
@@ -808,7 +821,7 @@ async function scanBybit(){
       item.img = img;
       item.mc = mc;
       item.ratio = mc > 0 ? (item.vol / mc) : 0;
-      item.bybitUrl = 'https://www.bybit.com/en/trade/spot/' + base + '/USDT';
+      item.bybitUrl = 'https://www.bybit.com/en/trade/spot/' + base + '/' + quotePart;
       item.cat = detectCategory(item);
       bybitCoins.push(item);
     });
@@ -1332,10 +1345,13 @@ function renderBybitTable(){
     return '<tr>'+
       '<td><div class="hotrank ' + rkcls + '">' + (i+1) + '</div></td>'+
       '<td><div class="dtkw">'+
-        (t.img ? '<img class="timg" src="' + t.img + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="timg" style="background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--BY)">B</div>')+
+        (t.img ? '<img class="timg" src="' + t.img + '" onerror="this.onerror=null;this.src=\'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/' + t.sym.toLowerCase() + '.png\';this.onerror=function(){this.outerHTML=\'<div class=\\\'timg\\\' style=\\\'background:linear-gradient(135deg,rgba(247,166,0,0.25),rgba(26,39,64,0.85));display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:var(--BY);border:1px solid rgba(247,166,0,0.35)\\\'>' + t.sym.slice(0,3) + '</div>\';};" loading="lazy"/>' : '<div class="timg" style="background:linear-gradient(135deg,rgba(247,166,0,0.25),rgba(26,39,64,0.85));display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:var(--BY);border:1px solid rgba(247,166,0,0.35)">' + t.sym.slice(0,3) + '</div>')+
         '<div class="tnames">'+
-          '<div style="display:flex;align-items:center;gap:6px">'+
-            '<span class="tsym" style="color:var(--BY)">' + (t.pair || t.sym + '/USDT') + '</span>'+
+          '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
+            '<a href="' + t.bybitUrl + '" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px" title="Trade ' + (t.pair || t.sym) + ' on Bybit Spot">'+
+              '<span class="tsym" style="color:var(--BY);font-weight:700">' + (t.pair || t.sym + '/USDT') + '</span>'+
+              '<span style="background:rgba(247,166,0,0.15);color:var(--BY);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;border:1px solid rgba(247,166,0,0.4);letter-spacing:0.3px;display:inline-flex;align-items:center">BYBIT &#8599;</span>'+
+            '</a>'+
             '<span class="cbadge ' + cat.cls + '">' + cat.tag + '</span>'+
           '</div>'+
           '<span class="tname">' + (t.name || t.sym) + ' &middot; $' + t.price.toFixed(t.price<1?4:2) + '</span>'+
@@ -1343,7 +1359,7 @@ function renderBybitTable(){
       '</div></td>'+
       '<td class="mcp">' + (t.mc > 0 ? fmt(t.mc) : '<span style="color:var(--tm)">Unranked</span>') + '</td>'+
       '<td class="mcp" style="color:var(--BY);font-weight:700">' + fmt(t.vol) + '</td>'+
-      '<td><div class="ratio-big"><span class="ratio-num s' + rc + '">' + pct + '%</span>'+
+      '<td><div class="ratio-big"><span class="ratio-num s' + rc + '">' + pct + '</span>'+
         '<div class="rbw"><div class="rb b' + rc + '" style="width:' + bw(t.ratio) + '"></div></div>'+
         '<span class="bdg bag' + rc + '">' + rl + '</span></div></td>'+
       '<td class="cc ' + su + '">' + au + ' ' + Math.abs(c24).toFixed(2) + '%</td>'+
