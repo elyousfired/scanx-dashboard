@@ -616,6 +616,7 @@ function switchMode(mode){
 
     document.getElementById('h1-lbl').textContent = 'Bybit Spot Scanned';
     document.getElementById('h-scanned-s').textContent = '100% Bybit spot pairs';
+    document.getElementById('mcapsel').value = "0"; // Show ALL Bybit tokens by default so none is hidden
     document.getElementById('h2-lbl').textContent = 'Top Bybit Vol/MC';
     document.getElementById('h3-lbl').textContent = 'Bybit Hot Movers';
     document.getElementById('c1-title').textContent = '⚡ BYBIT SPOT SECTORS';
@@ -691,15 +692,21 @@ async function scanBybit(){
       await fetchCGBasics();
     }
 
-    var bybitCoins = [];
+    var tokenMap = {};
     list.forEach(function(t){
       var pair = t.symbol || '';
-      // We process all USDT, USDC, BTC pairs
       var base = '';
-      if(pair.endsWith('USDT')) base = pair.slice(0, -4);
-      else if(pair.endsWith('USDC')) base = pair.slice(0, -4);
-      else if(pair.endsWith('BTC')) base = pair.slice(0, -3);
-      else base = pair;
+      var quote = '';
+      var quotes = ['USDT', 'USDC', 'EUR', 'BTC', 'ETH', 'DAI'];
+      for(var qi=0; qi<quotes.length; qi++){
+        var q = quotes[qi];
+        if(pair.endsWith(q)){
+          base = pair.slice(0, -q.length);
+          quote = q;
+          break;
+        }
+      }
+      if(!base) base = pair;
 
       if(STABLE_SYMS.has(base)) return; // exclude stablecoins from Hunter list
 
@@ -709,39 +716,56 @@ async function scanBybit(){
       var high = parseFloat(t.highPrice24h || 0);
       var low = parseFloat(t.lowPrice24h || 0);
 
-      // Match with CoinGecko Market Cap & metadata
+      if(!tokenMap[base]){
+        tokenMap[base] = {
+          sym: base,
+          primaryPair: pair,
+          pairs: [pair],
+          vol: vol,
+          price: price,
+          c24: chg,
+          high: high,
+          low: low
+        };
+      } else {
+        tokenMap[base].vol += vol;
+        tokenMap[base].pairs.push(pair);
+        if(quote === 'USDT'){
+          tokenMap[base].primaryPair = pair;
+          tokenMap[base].price = price;
+          tokenMap[base].c24 = chg;
+          tokenMap[base].high = high;
+          tokenMap[base].low = low;
+        }
+      }
+    });
+
+    var bybitCoins = [];
+    Object.keys(tokenMap).forEach(function(base){
+      var item = tokenMap[base];
       var cg = CG_MAP[base] || null;
       var mc = cg ? (cg.market_cap || 0) : 0;
       var name = cg ? cg.name : base;
       var img = cg ? cg.image : '';
 
-      var ratio = mc > 0 ? (vol / mc) : 0;
-      var item = {
-        id: cg ? cg.id : base.toLowerCase(),
-        sym: base,
-        pair: pair,
-        name: name,
-        img: img,
-        price: price,
-        vol: vol,
-        mc: mc,
-        ratio: ratio,
-        c24: chg,
-        high: high,
-        low: low,
-        bybitUrl: 'https://www.bybit.com/en/trade/spot/' + base + '/USDT'
-      };
+      item.id = cg ? cg.id : base.toLowerCase();
+      item.pair = item.primaryPair || (base + '/USDT');
+      item.name = name;
+      item.img = img;
+      item.mc = mc;
+      item.ratio = mc > 0 ? (item.vol / mc) : 0;
+      item.bybitUrl = 'https://www.bybit.com/en/trade/spot/' + base + '/USDT';
       item.cat = detectCategory(item);
       bybitCoins.push(item);
     });
 
     BYBIT_DATA = bybitCoins;
-    document.getElementById('badge-bybit-cnt').textContent = BYBIT_DATA.length + ' SPOT PAIRS';
-    setProgress(100, 'Bybit Scan Complete &#9679; ' + BYBIT_DATA.length + ' Spot Pairs Analyzed');
+    document.getElementById('badge-bybit-cnt').textContent = BYBIT_DATA.length + ' TOKENS (100% BYBIT)';
+    setProgress(100, 'Bybit Scan Complete &#9679; ' + BYBIT_DATA.length + ' unique tokens analyzed across all 538 instruments');
 
     var now = new Date();
     document.getElementById('h-time').textContent = now.toLocaleTimeString();
-    document.getElementById('fu').textContent = 'Scanned ' + BYBIT_DATA.length + ' Bybit Spot pairs at ' + now.toLocaleTimeString();
+    document.getElementById('fu').textContent = 'Scanned ' + BYBIT_DATA.length + ' Bybit tokens (all 538 pairs) at ' + now.toLocaleTimeString();
 
   } catch(e) {
     console.error(e);
@@ -760,13 +784,15 @@ async function scanBybit(){
 
 async function fetchCGBasics(){
   try {
-    var p1 = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page=1', 9000);
-    var p2 = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page=2', 9000);
-    var all = (p1||[]).concat(p2||[]);
-    all.forEach(function(c){
-      var s = (c.symbol||'').toUpperCase();
-      if(!CG_MAP[s]) CG_MAP[s] = c;
-    });
+    for(var p=1; p<=4; p++){
+      var data = await fetchSafe('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&page='+p, 9000);
+      if(data && Array.isArray(data)){
+        data.forEach(function(c){
+          var s = (c.symbol||'').toUpperCase();
+          if(!CG_MAP[s]) CG_MAP[s] = c;
+        });
+      }
+    }
   } catch(e){}
 }
 
